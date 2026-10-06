@@ -69,7 +69,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Base de datos: PostgreSQL 16
+# Base de datos: PostgreSQL 18
 
 DATABASES = {
     'default': {
@@ -78,7 +78,7 @@ DATABASES = {
         'USER': os.environ.get('POSTGRES_USER', 'suministros'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5433'),
     }
 }
 
