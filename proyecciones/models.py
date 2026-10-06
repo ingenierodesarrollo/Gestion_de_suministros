@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.db import models
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 
 
 class EstadoPeriodo(models.TextChoices):
@@ -93,3 +95,56 @@ class ProyeccionArea(models.Model):
 
     def __str__(self):
         return f'{self.area} · {self.periodo}'
+    
+class Linea(models.Model):
+    """Un producto, equipo o servicio dentro de la proyección de un área."""
+
+    proyeccion = models.ForeignKey(
+        ProyeccionArea, verbose_name='proyección', on_delete=models.CASCADE, related_name='lineas'
+    )
+    producto = models.CharField('equipo / producto / servicio', max_length=150)
+    serie = models.CharField('serie', max_length=100, blank=True)
+    unidad = models.ForeignKey(UnidadMedida, verbose_name='unidad', on_delete=models.PROTECT)
+
+    ene = models.PositiveIntegerField('enero', default=0)
+    feb = models.PositiveIntegerField('febrero', default=0)
+    mar = models.PositiveIntegerField('marzo', default=0)
+    abr = models.PositiveIntegerField('abril', default=0)
+    may = models.PositiveIntegerField('mayo', default=0)
+    jun = models.PositiveIntegerField('junio', default=0)
+    jul = models.PositiveIntegerField('julio', default=0)
+    ago = models.PositiveIntegerField('agosto', default=0)
+    sep = models.PositiveIntegerField('septiembre', default=0)
+    oct = models.PositiveIntegerField('octubre', default=0)
+    nov = models.PositiveIntegerField('noviembre', default=0)
+    dic = models.PositiveIntegerField('diciembre', default=0)
+
+    precio_unitario_est = models.DecimalField(
+        'precio unitario estimado',
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+    )
+    cantidad_autorizada = models.PositiveIntegerField(
+        'cantidad autorizada (año)', null=True, blank=True
+    )
+
+    MESES = ('ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic')
+
+    class Meta:
+        verbose_name = 'línea de proyección'
+        verbose_name_plural = 'líneas de proyección'
+        ordering = ['id']
+
+    def __str__(self):
+        return self.producto
+
+    @property
+    def total_anual(self):
+        return sum(getattr(self, mes) for mes in self.MESES)
+    
+    @property
+    def costo(self):
+        if self.precio_unitario_est is None:
+            return 0
+        return self.total_anual * self.precio_unitario_est
