@@ -1,0 +1,54 @@
+:root {
+  --azul: #1d4ed8;
+  --azul-claro: #dbeafe;
+  --rojo: #b91c1c;
+  --fondo: #f4f6fb;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--fondo);
+  margin: 0;
+  color: #1f2937;
+}
+
+.centrado {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.tarjeta {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 340px;
+  border-top: 4px solid var(--azul);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 { color: var(--azul); font-size: 1.25rem; margin: 0 0 1.25rem; }
+
+input[type="text"], input[type="email"], input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem;
+  border: 1px solid #c3c8d4;
+  border-radius: 4px;
+}
+
+button {
+  width: 100%;
+  padding: 0.65rem;
+  background: var(--azul);
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button.salir { background: #fff; color: var(--rojo); border: 1px solid var(--rojo); }
+
+.error { color: var(--rojo); font-size: 0.9rem; }

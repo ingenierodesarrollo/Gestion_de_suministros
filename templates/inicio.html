@@ -1,14 +1,18 @@
+{% load static %}
 <!doctype html>
 <html lang="es">
 <head>
   <title>Inicio · Gestión de suministros</title>
+  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
 </head>
-<body>
-  <h1>Gestión de suministros</h1>
-  <p>Hola, {{ user.nombre }}. Tu rol es: {{ user.get_rol_display }}.</p>
-  <form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Cerrar sesión</button>
-  </form>
+<body class="centrado">
+  <div class="tarjeta">
+    <h1>Gestión de suministros</h1>
+    <p>Hola, {{ user.nombre }}.<br>Tu rol es: {{ user.get_rol_display }}.</p>
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="salir">Cerrar sesión</button>
+    </form>
+  </div>
 </body>
 </html>
