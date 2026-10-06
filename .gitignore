@@ -1,0 +1,19 @@
+# Entorno virtual y caché de Python
+.venv/
+__pycache__/
+*.pyc
+
+# Configuración local con contraseñas: NUNCA subir
+.env
+
+# Archivos generados
+staticfiles/
+db.sqlite3
+.coverage
+htmlcov/
+
+# Editores y sistema
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

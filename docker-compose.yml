@@ -1,0 +1,19 @@
+# Base de datos PostgreSQL 16 para desarrollo local.
+# Usa el puerto 5433 en tu computador para no chocar con otro PostgreSQL instalado.
+# Encender:  docker compose up -d
+# Apagar:    docker compose down   (los datos se conservan en el volumen)
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - datos_postgres:/var/lib/postgresql
+
+volumes:
+  datos_postgres:
