@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     # Apps propias
     'areas',
     'cuentas',
+    'proyecciones',
 ]
 
 MIDDLEWARE = [
