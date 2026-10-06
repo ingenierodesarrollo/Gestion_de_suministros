@@ -61,3 +61,8 @@ button.salir { background: #fff; color: var(--rojo); border: 1px solid var(--roj
 .tabla tbody tr:hover td { background: var(--azul-claro); }
 .num { text-align: right; }
 .tabla tfoot td { font-weight: bold; color: var(--azul); }
+
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.rejilla label { font-size: 0.85rem; }
+.rejilla input, .rejilla select { width: 100%; box-sizing: border-box; padding: 0.4rem; }
+.rejilla .error, .rejilla ul { color: var(--rojo); font-size: 0.8rem; }

@@ -1,0 +1,24 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <title>Agregar linea</title>
+  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body class="pagina">
+
+  <div class="tarjeta">
+    <h1>Agregar línea · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }}</h1>
+    <form method="post">
+      {% csrf_token %}
+      <div class="rejilla">
+        {% for campo in form %}
+          <label>{{ campo.label|capfirst }}{{ campo }}{{ campo.errors }}</label>
+        {% endfor %}
+      </div>
+      <button type="submit">Guardar línea</button>
+    </form>
+    <p><a href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a></p>
+  </div>
+</body>
+</html>    
