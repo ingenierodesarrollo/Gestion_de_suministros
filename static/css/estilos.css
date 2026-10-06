@@ -52,3 +52,12 @@ button {
 button.salir { background: #fff; color: var(--rojo); border: 1px solid var(--rojo); }
 
 .error { color: var(--rojo); font-size: 0.9rem; }
+
+.pagina { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+.pagina .tarjeta { width: auto; }
+.tabla { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+.tabla th { background: var(--azul); color: #fff; text-align: left; padding: 0.5rem; }
+.tabla td { padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
+.tabla tbody tr:hover td { background: var(--azul-claro); }
+.num { text-align: right; }
+.tabla tfoot td { font-weight: bold; color: var(--azul); }

@@ -1,0 +1,29 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <title>Detalle de proyección</title>
+  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body class="centrado">
+
+  <div class="tarjeta">
+    <h1>{{ proyeccion.area.nombre }} · {{ proyeccion.periodo }} ({{ proyeccion.get_estado_display }})</h1>
+    <table class="tabla">
+      <thead><tr><th>Producto</th><th>Unidad</th><th class="num">Total año</th><th class="num">Precio est.</th><th class="num">Costo</th></tr></thead>
+      <tbody>
+      {% for l in lineas %}
+        <tr>
+          <td>{{ l.producto }}</td><td>{{ l.unidad }}</td><td class="num">{{ l.total_anual }}</td>
+          <td class="num">{{ l.precio_unitario_est|floatformat:2 }}</td><td class="num">{{ l.costo|floatformat:2 }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5">Esta proyección aún no tiene líneas.</td></tr>
+      {% endfor %}
+      </tbody>
+      <tfoot><tr><td colspan="4">Costo total</td><td class="num">{{ costo_total|floatformat:2 }}</td></tr></tfoot>
+    </table>
+    <p><a href="{% url 'proyecciones:mi_proyeccion' %}">Volver a Mi proyección</a></p>
+  </div>
+</body>
+</html>

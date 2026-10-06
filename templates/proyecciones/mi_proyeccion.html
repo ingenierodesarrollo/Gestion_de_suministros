@@ -1,0 +1,28 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <title>Mi proyección</title>
+  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body class="pagina">
+  <div class="tarjeta">
+    <h1>Mi proyección</h1>
+        <table class="tabla">
+      <thead><tr><th>Año</th><th>Área</th><th>Estado</th><th class="num">Líneas</th><th></th></tr></thead>
+      <tbody>
+      {% for p in proyecciones %}
+        <tr>
+          <td>{{ p.periodo }}</td><td>{{ p.area.nombre }}</td><td>{{ p.get_estado_display }}</td>
+          <td class="num">{{ p.lineas.count }}</td>
+          <td><a href="{% url 'proyecciones:detalle' p.pk %}">Ver</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5">Tu área aún no tiene proyecciones.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p><a href="{% url 'inicio' %}">Volver al inicio</a></p>
+  </div>
+</body>
+</html>
