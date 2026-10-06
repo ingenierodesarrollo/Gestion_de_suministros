@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Periodo, UnidadMedida
+from .models import Periodo, ProyeccionArea, UnidadMedida
 
 @admin.register(Periodo)
 class PeriodoAdmin(admin.ModelAdmin):
@@ -11,3 +11,8 @@ class PeriodoAdmin(admin.ModelAdmin):
 class UnidadMedidaAdmin(admin.ModelAdmin):
     list_display = ('nombre',)
     search_fields = ('nombre',)
+    
+@admin.register(ProyeccionArea)
+class ProyeccionAreaAdmin(admin.ModelAdmin):
+    list_display = ('area','periodo','estado','responsable')
+    list_filter = ('periodo','estado')   

@@ -44,3 +44,52 @@ class UnidadMedida(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+class EstadoProyeccion(models.TextChoices):
+    BORRADOR = 'borrador', 'Borrador'
+    ENVIADA = 'enviada', 'Enviada'
+    APROBADA = 'aprobada', 'Aprobada'
+
+
+class ProyeccionArea(models.Model):
+    """Proyección anual de compras de un área."""
+
+    periodo = models.ForeignKey(
+        Periodo, verbose_name='periodo', on_delete=models.PROTECT, related_name='proyecciones'
+    )
+    area = models.ForeignKey(
+        'areas.Area', verbose_name='área', on_delete=models.PROTECT, related_name='proyecciones'
+    )
+    estado = models.CharField(
+        'estado', max_length=10, choices=EstadoProyeccion.choices, default=EstadoProyeccion.BORRADOR
+    )
+    responsable = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='responsable',
+        on_delete=models.PROTECT,
+        related_name='proyecciones_a_cargo',
+    )
+    fecha_envio = models.DateTimeField('fecha de envío', null=True, blank=True)
+    aprobada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='aprobada por',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='proyecciones_aprobadas',
+    )
+    fecha_aprobacion = models.DateTimeField('fecha de aprobación', null=True, blank=True)
+    observaciones = models.TextField('observaciones', blank=True)
+
+    class Meta:
+        verbose_name = 'proyección de área'
+        verbose_name_plural = 'proyecciones de área'
+        ordering = ['-periodo__anio', 'area__nombre']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['periodo', 'area'], name='una_proyeccion_por_periodo_y_area'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.area} · {self.periodo}'
