@@ -87,9 +87,9 @@ DATABASES = {
 
 AUTH_USER_MODEL = 'cuentas.Usuario'
 
-LOGIN_URL = 'cuentas:login'
-LOGIN_REDIRECT_URL = 'cuentas:inicio'
-LOGOUT_REDIRECT_URL = 'cuentas:login'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'inicio'
+LOGOUT_REDIRECT_URL = 'login'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
