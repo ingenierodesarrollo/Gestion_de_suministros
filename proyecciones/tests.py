@@ -42,4 +42,43 @@ class SeguridadPorAreaTest(BaseProyeccionTest):
         respuesta = self.client.get(reverse('proyecciones:detalle', args=[self.proy_urg.pk]))
         self.assertEqual(respuesta.status_code, 403)    
     
+class EnviarTest(BaseProyeccionTest):
+
+    def test_no_se_envia_sin_lineas(self):
+        self.client.force_login(self.coord_urg)
+        self.client.post(reverse('proyecciones:enviar', args=[self.proy_urg.pk]))
+        self.proy_urg.refresh_from_db()
+        self.assertEqual(self.proy_urg.estado, EstadoProyeccion.BORRADOR)
+
+    def test_se_envia_con_lineas(self):
+        self.crear_linea(self.proy_urg)
+        self.client.force_login(self.coord_urg)
+        self.client.post(reverse('proyecciones:enviar', args=[self.proy_urg.pk]))
+        self.proy_urg.refresh_from_db()
+        self.assertEqual(self.proy_urg.estado, EstadoProyeccion.ENVIADA)
+        self.assertIsNotNone(self.proy_urg.fecha_envio)
+
+
+class LoEnviadoNoSeTocaTest(BaseProyeccionTest):
+
+    def setUp(self):
+        self.linea = self.crear_linea(self.proy_urg)
+        self.proy_urg.estado = EstadoProyeccion.ENVIADA
+        self.proy_urg.save()
+        self.client.force_login(self.coord_urg)
+
+    def test_no_agrega_lineas(self):
+        respuesta = self.client.get(reverse('proyecciones:agregar_linea', args=[self.proy_urg.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_no_edita_lineas(self):
+        respuesta = self.client.post(reverse('proyecciones:editar_linea', args=[self.linea.pk]), {'producto': 'Cambiado'})
+        self.assertEqual(respuesta.status_code, 403)
+        self.linea.refresh_from_db()
+        self.assertEqual(self.linea.producto, 'Guantes')
+
+    def test_no_borra_lineas(self):
+        respuesta = self.client.post(reverse('proyecciones:borrar_linea', args=[self.linea.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertTrue(Linea.objects.filter(pk=self.linea.pk).exists())
     
