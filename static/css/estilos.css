@@ -1,7 +1,7 @@
 :root {
-  --azul: #1d4ed8;
+  --azul: #172554;
   --azul-claro: #dbeafe;
-  --rojo: #b91c1c;
+  --rojo: #991b1b;
   --fondo: #f4f6fb;
 }
 
@@ -77,3 +77,26 @@ aviso.error { border: 1px solid var(--rojo); color: var(--rojo); }
 .tabla input { width: 6rem; padding: 0.3rem; }
 
 .separado { margin-top: 0.75rem;}
+
+:root {
+    --primary: #1e3a8a;
+    --secondary: #1e3a8a;
+    --accent: #dbeafe;
+    --header-bg: #1e3a8a;
+    --header-color: #ffffff;
+    --header-branding-color: #ffffff;
+    --header-link-color: #ffffff;
+    --breadcrumbs-bg: #dbeafe;
+    --breadcrumbs-fg: #1e3a8a;
+    --breadcrumbs-link-fg: #1e3a8a;
+    --link-fg: #1e3a8a;
+    --link-hover-color: #172554;
+    --button-bg: #1e3a8a;
+    --button-hover-bg: #172554;
+    --default-button-bg: #1e3a8a;
+    --default-button-hover-bg: #172554;
+    --object-tools-bg: #1e3a8a;
+    --object-tools-hover-bg: #172554;
+    --delete-button-bg: #991b1b;
+    --delete-button-hover-bg: #7f1d1d;
+}

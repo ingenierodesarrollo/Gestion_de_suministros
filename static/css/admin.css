@@ -1,0 +1,22 @@
+:root {
+    --primary: #172554;
+    --secondary: #172554;
+    --accent: #dbeafe;
+    --header-bg: #172554;
+    --header-color: #ffffff;
+    --header-branding-color: #ffffff;
+    --header-link-color: #ffffff;
+    --breadcrumbs-bg: #dbeafe;
+    --breadcrumbs-fg: #172554;
+    --breadcrumbs-link-fg: #172554;
+    --link-fg: #172554;
+    --link-hover-color: #0f1a3d;
+    --button-bg: #172554;
+    --button-hover-bg: #0f1a3d;
+    --default-button-bg: #172554;
+    --default-button-hover-bg: #0f1a3d;
+    --object-tools-bg: #172554;
+    --object-tools-hover-bg: #0f1a3d;
+    --delete-button-bg: #991b1b;
+    --delete-button-hover-bg: #7f1d1d;
+}
