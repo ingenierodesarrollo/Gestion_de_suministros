@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.utils import timezone
 
 from .models import EstadoProyeccion, Linea, ProyeccionArea
-from .forms import LineaForm
+from .forms import AutorizadoFormSet ,LineaForm
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -90,3 +90,22 @@ def enviar_proyeccion(request, pk):
             proyeccion.save(update_fields=['estado', 'fecha_envio'])
             messages.success(request, 'Proyeccion enviada. Ya no se puede modificar')
     return redirect('proyecciones:detalle', pk=proyeccion.pk)
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def revision(request):
+    """Todas las proyecciones de todas las áreas, para los administradores."""
+    proyecciones = ProyeccionArea.objects.select_related('periodo', 'area')
+    return render(request, 'proyecciones/revision.html', {'proyecciones': proyecciones})
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def revisar_proyeccion(request, pk):
+    proyeccion = get_object_or_404(ProyeccionArea, pk=pk)
+    if proyeccion.estado == EstadoProyeccion.BORRADOR:
+        messages.error(request, 'Esa proyección aún no ha sido enviada.')
+        return redirect('proyecciones:revision')
+    formset = AutorizadoFormSet(request.POST or None, queryset=proyeccion.lineas.select_related('unidad'))
+    if request.method == 'POST' and formset.is_valid():
+        formset.save()
+        messages.success(request, 'Cantidades autorizadas guardadas.')
+        return redirect('proyecciones:revisar', pk=proyeccion.pk)
+    return render(request, 'proyecciones/revisar.html', {'proyeccion': proyeccion, 'formset': formset})

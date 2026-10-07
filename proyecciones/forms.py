@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import modelformset_factory
 
 from .models import Linea
 
@@ -9,3 +10,6 @@ class LineaForm(forms.ModelForm):
     class Meta:
         model = Linea
         fields = ['producto', 'serie', 'unidad', *Linea.MESES, 'precio_unitario_est']
+        
+AutorizadoFormSet = modelformset_factory(Linea, fields=['cantidad_autorizada'], extra = 0) 
+       

@@ -11,4 +11,6 @@ urlpatterns = [
     path('linea/<int:pk>/editar/', views.editar_linea, name='editar_linea'),
     path('linea/<int:pk>/borrar/', views.borrar_linea, name='borrar_linea'),
     path('<int:pk>/enviar/', views.enviar_proyeccion, name = 'enviar'),
+    path('revision/',views.revision, name = 'revision'),
+    path('<int:pk>/revisar/', views.revisar_proyeccion, name='revisar'),
 ]
