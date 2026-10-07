@@ -10,4 +10,5 @@ urlpatterns = [
     path('<int:pk>/agregar-linea/', views.agregar_linea, name='agregar_linea'),
     path('linea/<int:pk>/editar/', views.editar_linea, name='editar_linea'),
     path('linea/<int:pk>/borrar/', views.borrar_linea, name='borrar_linea'),
+    path('<int:pk>/enviar/', views.enviar_proyeccion, name = 'enviar'),
 ]

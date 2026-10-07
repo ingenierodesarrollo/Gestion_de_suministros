@@ -1,42 +1,76 @@
 {% load static %}
 <!doctype html>
 <html lang="es">
+
 <head>
   <title>Detalle de proyección</title>
   <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
 </head>
+
 <body class="pagina">
 
   <div class="tarjeta">
     <h1>{{ proyeccion.area.nombre }} · {{ proyeccion.periodo }} ({{ proyeccion.get_estado_display }})</h1>
+    {% for m in messages %}
+    <p class="aviso {{ m.tags }}">{{ m }}</p>
+    {% endfor %}
+    {% if proyeccion.fecha_envio %}
+    <p>Enviada el {{ proyeccion.fecha_envio|date:"d/m/Y H:i" }}</p>
+    {% endif %}
     <table class="tabla">
-      <thead><tr><th>Producto</th><th>Unidad</th><th class="num">Total año</th><th class="num">Precio est.</th><th class="num">Costo</th><th></th></tr></thead>
-      <tbody>
-      {% for l in lineas %}
+      <thead>
         <tr>
-          <td>{{ l.producto }}</td><td>{{ l.unidad }}</td><td class="num">{{ l.total_anual }}</td>
-          <td class="num">{{ l.precio_unitario_est|floatformat:"2g" }}</td><td class="num">{{ l.costo|floatformat:"2g" }}</td>
+          <th>Producto</th>
+          <th>Unidad</th>
+          <th class="num">Total año</th>
+          <th class="num">Precio est.</th>
+          <th class="num">Costo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lineas %}
+        <tr>
+          <td>{{ l.producto }}</td>
+          <td>{{ l.unidad }}</td>
+          <td class="num">{{ l.total_anual }}</td>
+          <td class="num">{{ l.precio_unitario_est|floatformat:"2g" }}</td>
+          <td class="num">{{ l.costo|floatformat:"2g" }}</td>
           <td>
             {% if proyeccion.estado == 'borrador' %}
-              <a href="{% url 'proyecciones:editar_linea' l.pk %}">Editar</a>
-              <form method="post" action="{% url 'proyecciones:borrar_linea' l.pk %}" class="en-linea"
-                    onsubmit="return confirm('¿Borrar esta línea?');">
-                {% csrf_token %}
-                <button type="submit" class="boton-borrar">Borrar</button>
-              </form>
+            <a href="{% url 'proyecciones:editar_linea' l.pk %}">Editar</a>
+            <form method="post" action="{% url 'proyecciones:borrar_linea' l.pk %}" class="en-linea"
+              onsubmit="return confirm('¿Borrar esta línea?');">
+              {% csrf_token %}
+              <button type="submit" class="boton-borrar">Borrar</button>
+            </form>
             {% endif %}
           </td>
         </tr>
-      {% empty %}
-        <tr><td colspan="6">Esta proyección aún no tiene líneas.</td></tr>
-      {% endfor %}
+        {% empty %}
+        <tr>
+          <td colspan="6">Esta proyección aún no tiene líneas.</td>
+        </tr>
+        {% endfor %}
       </tbody>
-      <tfoot><tr><td colspan="4">Costo total</td><td class="num">{{ costo_total|floatformat:"2g" }}</td><td></td></tr></tfoot>
+      <tfoot>
+        <tr>
+          <td colspan="4">Costo total</td>
+          <td class="num">{{ costo_total|floatformat:"2g" }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
     </table>
-      {% if proyeccion.estado == 'borrador' %}
-      <p><a href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a></p>
+    {% if proyeccion.estado == 'borrador' %}
+    <p><a href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a></p>
+    <form method="post" action="{% url 'proyecciones:enviar' proyeccion.pk %}"
+      onsubmit="return confirm('Después de enviar ya no podrás modificarla. ¿Enviar?');">
+      {% csrf_token %}
+      <button type="submit">Enviar proyección</button>
+    </form>
     {% endif %}
     <p><a href="{% url 'proyecciones:mi_proyeccion' %}">Volver a Mi proyección</a></p>
   </div>
 </body>
+
 </html>

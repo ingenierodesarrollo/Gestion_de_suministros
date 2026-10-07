@@ -2,6 +2,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from cuentas.models import Rol
 from cuentas.permisos import rol_requerido
 from django.core.exceptions import PermissionDenied
+from django.contrib import messages
+from django.utils import timezone
 
 from .models import EstadoProyeccion, Linea, ProyeccionArea
 from .forms import LineaForm
@@ -74,4 +76,17 @@ def borrar_linea(request, pk):
     linea, proyeccion = _linea_editable(request, pk)
     if request.method == 'POST':  # solo borra con el botón, nunca con solo abrir un enlace
         linea.delete()
+    return redirect('proyecciones:detalle', pk=proyeccion.pk)
+
+@rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def enviar_proyeccion(request, pk):
+    proyeccion = _obtener_proyeccion(request, pk)
+    if request.method == 'POST' and proyeccion.estado == EstadoProyeccion.BORRADOR:
+        if not proyeccion.lineas.exists():
+            messages.error(request, 'Agrega al menos una linea antes de enviar.')
+        else:
+            proyeccion.estado = EstadoProyeccion.ENVIADA
+            proyeccion.fecha_envio = timezone.now()
+            proyeccion.save(update_fields=['estado', 'fecha_envio'])
+            messages.success(request, 'Proyeccion enviada. Ya no se puede modificar')
     return redirect('proyecciones:detalle', pk=proyeccion.pk)
