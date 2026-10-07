@@ -81,4 +81,64 @@ class LoEnviadoNoSeTocaTest(BaseProyeccionTest):
         respuesta = self.client.post(reverse('proyecciones:borrar_linea', args=[self.linea.pk]))
         self.assertEqual(respuesta.status_code, 403)
         self.assertTrue(Linea.objects.filter(pk=self.linea.pk).exists())
+        
+class RevisionTest(BaseProyeccionTest):
+
+    def setUp(self):
+        self.linea = self.crear_linea(self.proy_urg)
+        self.proy_urg.estado = EstadoProyeccion.ENVIADA
+        self.proy_urg.save()
+
+    def test_coordinador_no_entra_a_revision(self):
+        self.client.force_login(self.coord_urg)
+        self.assertEqual(self.client.get(reverse('proyecciones:revision')).status_code, 403)
+        self.assertEqual(self.client.get(reverse('proyecciones:revisar', args=[self.proy_urg.pk])).status_code, 403)
+
+    def test_administrador_entra_a_revision(self):
+        self.client.force_login(self.admin)
+        self.assertEqual(self.client.get(reverse('proyecciones:revision')).status_code, 200)
+
+    def test_cero_es_un_autorizado_valido(self):
+        self.client.force_login(self.admin)
+        datos = {
+            'form-TOTAL_FORMS': '1', 'form-INITIAL_FORMS': '1',
+            'form-MIN_NUM_FORMS': '0', 'form-MAX_NUM_FORMS': '1000',
+            'form-0-id': self.linea.pk, 'form-0-cantidad_autorizada': '0',
+        }
+        self.client.post(reverse('proyecciones:revisar', args=[self.proy_urg.pk]), datos)
+        self.linea.refresh_from_db()
+        self.assertEqual(self.linea.cantidad_autorizada, 0)
+
+
+class AprobarTest(BaseProyeccionTest):
+
+    def setUp(self):
+        self.linea = self.crear_linea(self.proy_urg)
+        self.proy_urg.estado = EstadoProyeccion.ENVIADA
+        self.proy_urg.save()
+
+    def test_no_aprueba_con_autorizado_vacio(self):
+        self.client.force_login(self.admin)
+        self.client.post(reverse('proyecciones:aprobar', args=[self.proy_urg.pk]))
+        self.proy_urg.refresh_from_db()
+        self.assertEqual(self.proy_urg.estado, EstadoProyeccion.ENVIADA)
+
+    def test_aprueba_con_cero_autorizado(self):
+        self.linea.cantidad_autorizada = 0
+        self.linea.save()
+        self.client.force_login(self.admin)
+        self.client.post(reverse('proyecciones:aprobar', args=[self.proy_urg.pk]))
+        self.proy_urg.refresh_from_db()
+        self.assertEqual(self.proy_urg.estado, EstadoProyeccion.APROBADA)
+        self.assertEqual(self.proy_urg.aprobada_por, self.admin)
+        self.assertIsNotNone(self.proy_urg.fecha_aprobacion)
+
+    def test_coordinador_no_aprueba(self):
+        self.linea.cantidad_autorizada = 5
+        self.linea.save()
+        self.client.force_login(self.coord_urg)
+        respuesta = self.client.post(reverse('proyecciones:aprobar', args=[self.proy_urg.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+        self.proy_urg.refresh_from_db()
+        self.assertEqual(self.proy_urg.estado, EstadoProyeccion.ENVIADA)
     
