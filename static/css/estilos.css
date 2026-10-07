@@ -75,3 +75,5 @@ form.en-linea { display: inline; }
 aviso.error { border: 1px solid var(--rojo); color: var(--rojo); }
 
 .tabla input { width: 6rem; padding: 0.3rem; }
+
+.separado { margin-top: 0.75rem;}

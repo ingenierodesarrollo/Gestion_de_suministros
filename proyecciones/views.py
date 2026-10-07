@@ -109,3 +109,17 @@ def revisar_proyeccion(request, pk):
         messages.success(request, 'Cantidades autorizadas guardadas.')
         return redirect('proyecciones:revisar', pk=proyeccion.pk)
     return render(request, 'proyecciones/revisar.html', {'proyeccion': proyeccion, 'formset': formset})
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def aprobar_proyeccion(request, pk):
+    proyeccion = get_object_or_404(ProyeccionArea, pk=pk)
+    if request.method == 'POST' and proyeccion.estado == EstadoProyeccion.ENVIADA:
+        if proyeccion.lineas.filter(cantidad_autorizada__isnull=True).exists():
+            messages.error(request, 'Llena la cantidad autorizada de todas las líneas antes de aprobar.')
+        else:
+            proyeccion.estado = EstadoProyeccion.APROBADA
+            proyeccion.aprobada_por = request.user  # queda registrado quién aprobó
+            proyeccion.fecha_aprobacion = timezone.now()
+            proyeccion.save(update_fields=['estado', 'aprobada_por', 'fecha_aprobacion'])
+            messages.success(request, 'Proyección aprobada.')
+    return redirect('proyecciones:revisar', pk=proyeccion.pk)

@@ -13,4 +13,5 @@ urlpatterns = [
     path('<int:pk>/enviar/', views.enviar_proyeccion, name = 'enviar'),
     path('revision/',views.revision, name = 'revision'),
     path('<int:pk>/revisar/', views.revisar_proyeccion, name='revisar'),
+    path('<int:pk>/aprobar', views.aprobar_proyeccion, name = 'aprobar'),
 ]
