@@ -152,3 +152,28 @@ class ProductosSugeridosTest(BaseProyeccionTest):
         self.assertContains(respuesta, 'Gasas esteriles')
         self.assertNotContains(respuesta, 'Producto viejo')
     
+class CalculosLineaTest(BaseProyeccionTest):
+
+    def test_total_anual_y_costo(self):
+        linea = self.crear_linea(self.proy_urg)
+        linea.ene = 10
+        linea.feb = 5
+        linea.precio_unitario_est = 1000
+        linea.save()
+        linea.refresh_from_db()
+        self.assertEqual(linea.total_anual, linea.ene + linea.feb + sum(getattr(linea, m) for m in Linea.MESES[2:]))
+        self.assertEqual(linea.costo, linea.total_anual * linea.precio_unitario_est)
+        
+class BorrarLineaTest(BaseProyeccionTest):
+
+    def test_coordinador_borra_su_linea_en_borrador(self):
+        linea = self.crear_linea(self.proy_urg)
+        self.client.force_login(self.coord_urg)
+        self.client.post(reverse('proyecciones:borrar_linea', args=[linea.pk]))
+        self.assertFalse(Linea.objects.filter(pk=linea.pk).exists())
+
+    def test_coordinador_no_borra_linea_de_otra_area(self):
+        linea = self.crear_linea(self.proy_urg)
+        self.client.force_login(self.coord_lab)
+        self.client.post(reverse('proyecciones:borrar_linea', args=[linea.pk]))
+        self.assertTrue(Linea.objects.filter(pk=linea.pk).exists())
