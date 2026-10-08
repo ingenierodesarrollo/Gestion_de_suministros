@@ -100,3 +100,5 @@ aviso.error { border: 1px solid var(--rojo); color: var(--rojo); }
     --delete-button-bg: #991b1b;
     --delete-button-hover-bg: #7f1d1d;
 }
+
+.resumen { color: var(--azul); margin-bottom: 1rem; }

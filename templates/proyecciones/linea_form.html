@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}{{ titulo }} · Gestión de suministros{% endblock %}
 
@@ -12,8 +13,14 @@
           <label>{{ campo.label|capfirst }}{{ campo }}{{ campo.errors }}</label>
         {% endfor %}
       </div>
+      <p class="resumen">Total del año: <strong id="total-anual">0</strong> · Costo 
+        estimado: <strong id="costo-estimado">0,00</strong></p>
       <button type="submit">Guardar línea</button>
     </form>
     <p><a href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a></p>
   </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/linea_form.js' %}"> </script>
 {% endblock %}
