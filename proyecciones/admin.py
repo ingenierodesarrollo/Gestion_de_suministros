@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Linea, Periodo, ProductoSugerido, ProyeccionArea, UnidadMedida
+from .models import Linea, Periodo, ProductoSugerido, ProyeccionArea, UnidadMedida, Ajuste, Bitacora
 
 @admin.register(Periodo)
 class PeriodoAdmin(admin.ModelAdmin):
@@ -28,3 +28,26 @@ class ProductoSugeridoAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'activo')
     list_filter = ('activo',)
     search_fields = ('nombre',)
+
+class SoloLectura(admin.ModelAdmin):
+    """Tablas de rastro: se ven en el panel, pero no se agregan, editan ni borran."""
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Bitacora)
+class BitacoraAdmin(SoloLectura):
+    list_display = ('fecha_hora', 'usuario', 'accion', 'tabla', 'registro_id', 'campo', 'valor_anterior', 'valor_nuevo')
+    list_filter = ('accion',)
+
+
+@admin.register(Ajuste)
+class AjusteAdmin(SoloLectura):
+    list_display = ('fecha', 'linea', 'campo', 'valor_aprobado', 'valor_nuevo', 'hecho_por')

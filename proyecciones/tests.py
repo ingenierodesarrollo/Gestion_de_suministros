@@ -7,7 +7,7 @@ from django.urls import reverse
 from areas.models import Area
 from cuentas.models import Rol, Usuario
 
-from .models import EstadoProyeccion, Linea, Periodo, ProductoSugerido, ProyeccionArea, UnidadMedida
+from .models import EstadoProyeccion, Linea, Periodo, ProductoSugerido, ProyeccionArea, UnidadMedida, Bitacora, EstadoPeriodo
 
 
 class BaseProyeccionTest(TestCase):
@@ -203,3 +203,34 @@ class AbrirPeriodoTest(BaseProyeccionTest):
         self.client.force_login(self.coord_urg)
         respuesta = self.client.get(reverse('proyecciones:abrir_periodo'))
         self.assertEqual(respuesta.status_code, 403)
+        
+class PeriodoCerradoTest(BaseProyeccionTest):
+
+    def test_con_periodo_cerrado_el_area_no_agrega_ni_edita_ni_envia(self):
+        linea = self.crear_linea(self.proy_urg)
+        self.periodo.estado = EstadoPeriodo.CERRADO
+        self.periodo.save()
+        self.client.force_login(self.coord_urg)
+        self.assertEqual(self.client.get(reverse('proyecciones:agregar_linea', args=[self.proy_urg.pk])).status_code, 403)
+        self.assertEqual(self.client.post(reverse('proyecciones:editar_linea', args=[linea.pk]), {'producto': 'Cambiado'}).status_code, 403)
+        self.assertEqual(self.client.post(reverse('proyecciones:enviar', args=[self.proy_urg.pk])).status_code, 403)
+        self.proy_urg.refresh_from_db()
+        self.assertEqual(self.proy_urg.estado, EstadoProyeccion.BORRADOR)
+
+    def test_administrador_cierra_y_reabre_con_rastro(self):
+        self.client.force_login(self.admin)
+        url = reverse('proyecciones:alternar_periodo', args=[self.periodo.pk])
+        self.client.post(url)
+        self.periodo.refresh_from_db()
+        self.assertEqual(self.periodo.estado, EstadoPeriodo.CERRADO)
+        self.client.post(url)
+        self.periodo.refresh_from_db()
+        self.assertEqual(self.periodo.estado, EstadoPeriodo.ABIERTO)
+        self.assertEqual(Bitacora.objects.filter(tabla='periodo', registro_id=self.periodo.pk).count(), 2)
+
+    def test_coordinador_no_cierra_periodo(self):
+        self.client.force_login(self.coord_urg)
+        respuesta = self.client.post(reverse('proyecciones:alternar_periodo', args=[self.periodo.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+        self.periodo.refresh_from_db()
+        self.assertEqual(self.periodo.estado, EstadoPeriodo.ABIERTO)

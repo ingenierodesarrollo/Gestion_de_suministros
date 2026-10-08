@@ -8,6 +8,9 @@
     {% for m in messages %}
       <p class="aviso {{ m.tags }}">{{ m }}</p>
     {% endfor %}
+    {% if proyeccion.estado == 'borrador' and not puede_editar %}
+      <p class="aviso error">El periodo está cerrado: ya no se pueden agregar ni cambiar líneas. La coordinadora debe reabrirlo.</p>
+    {% endif %}
     {% if proyeccion.fecha_envio %}
       <p>Enviada el {{ proyeccion.fecha_envio|date:"d/m/Y H:i" }}</p>
     {% endif %}
@@ -33,7 +36,7 @@
           <td class="num">{{ l.precio_unitario_est|floatformat:"2g" }}</td>
           <td class="num">{{ l.costo|floatformat:"2g" }}</td>
           <td>
-            {% if proyeccion.estado == 'borrador' %}
+            {% if puede_editar %}
               <a href="{% url 'proyecciones:editar_linea' l.pk %}">Editar</a>
               <form method="post" action="{% url 'proyecciones:borrar_linea' l.pk %}" class="en-linea"
                 onsubmit="return confirm('¿Borrar esta línea?');">
@@ -57,7 +60,7 @@
         </tr>
       </tfoot>
     </table>
-    {% if proyeccion.estado == 'borrador' %}
+    {% if puede_editar %}
       <p><a href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a></p>
       {% if lineas %}
         <form method="post" action="{% url 'proyecciones:enviar' proyeccion.pk %}"

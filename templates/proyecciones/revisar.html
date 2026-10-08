@@ -20,6 +20,7 @@
             <th class="num">Pedido (año)</th>
             <th class="num">Costo</th>
             <th class="num">Autorizado</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -30,12 +31,13 @@
             <td>{{ f.instance.unidad }}</td>
             <td class="num">{{ f.instance.total_anual }}</td>
             <td class="num">{{ f.instance.costo|floatformat:"2g" }}</td>
-            <td class="num">{{ f.cantidad_autorizada }}{{ f.cantidad_autorizada.errors }}</td>
+            <td class="num">{% if proyeccion.estado == 'enviada' %}{{ f.cantidad_autorizada }}{{ f.cantidad_autorizada.errors }}{% else %}{{ f.instance.cantidad_autorizada }}{% endif %}</td>
+            <td><a href="{% url 'proyecciones:corregir_linea' f.instance.pk %}">{% if proyeccion.estado == 'aprobada' %}Ajustar{% else %}Corregir{% endif %}</a></td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
-      <button type="submit">Guardar autorizado</button>
+      {% if proyeccion.estado == 'enviada' %}<button type="submit">Guardar autorizado</button>{% endif %}
     </form>
 
     {% if proyeccion.estado == 'enviada' %}

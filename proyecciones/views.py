@@ -6,9 +6,9 @@ from django.contrib import messages
 from django.utils import timezone
 from datetime import date
 
-from .models import EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea
-from .forms import AutorizadoFormSet ,AbrirPeriodoForm,LineaForm
-from .servicios import abrir_periodo
+from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo
+from .forms import AutorizadoFormSet ,AbrirPeriodoForm, CorreccionLineaForm,LineaForm
+from .servicios import abrir_periodo, guardar_correccion, valores_linea, alternar_periodo
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -26,8 +26,10 @@ def detalle_proyeccion(request, pk):
         raise PermissionDenied
     lineas = proyeccion.lineas.select_related('unidad')
     costo_total = sum(linea.costo for linea in lineas)
+    puede_editar = (proyeccion.estado == EstadoProyeccion.BORRADOR
+                    and proyeccion.periodo.estado == EstadoPeriodo.ABIERTO)
     return render(request, 'proyecciones/detalle.html', {
-        'proyeccion': proyeccion, 'lineas': lineas, 'costo_total': costo_total,
+        'proyeccion': proyeccion, 'lineas': lineas, 'costo_total': costo_total, 'puede_editar': puede_editar,
     })
     
 def _obtener_proyeccion(request, pk):
@@ -36,6 +38,11 @@ def _obtener_proyeccion(request, pk):
     if request.user.es_coordinador and proyeccion.area_id != request.user.area_id:
         raise PermissionDenied
     return proyeccion
+
+def _exigir_periodo_abierto(proyeccion):
+    """Con el periodo cerrado, nadie agrega, edita, borra ni envía líneas (se puede reabrir)."""
+    if proyeccion.periodo.estado != EstadoPeriodo.ABIERTO:
+        raise PermissionDenied
 
 def _nombres_sugeridos():
     """Nombres activos que se ofrecen como sugerencia en el campo producto."""
@@ -48,6 +55,7 @@ def agregar_linea(request, pk):
     proyeccion = _obtener_proyeccion(request, pk)
     if proyeccion.estado != EstadoProyeccion.BORRADOR:
         raise PermissionDenied  # ya enviada: el área no la cambia
+    _exigir_periodo_abierto(proyeccion)
     form = LineaForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         linea = form.save(commit=False)  # aún no guarda: falta decirle a qué proyección pertenece
@@ -65,6 +73,7 @@ def _linea_editable(request, pk):
     proyeccion = _obtener_proyeccion(request, linea.proyeccion_id)
     if proyeccion.estado != EstadoProyeccion.BORRADOR:
         raise PermissionDenied
+    _exigir_periodo_abierto(proyeccion)
     return linea, proyeccion
 
 
@@ -90,6 +99,7 @@ def borrar_linea(request, pk):
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def enviar_proyeccion(request, pk):
     proyeccion = _obtener_proyeccion(request, pk)
+    _exigir_periodo_abierto(proyeccion)
     if request.method == 'POST' and proyeccion.estado == EstadoProyeccion.BORRADOR:
         if not proyeccion.lineas.exists():
             messages.error(request, 'Agrega al menos una linea antes de enviar.')
@@ -104,7 +114,9 @@ def enviar_proyeccion(request, pk):
 def revision(request):
     """Todas las proyecciones de todas las áreas, para los administradores."""
     proyecciones = ProyeccionArea.objects.select_related('periodo', 'area')
-    return render(request, 'proyecciones/revision.html', {'proyecciones': proyecciones})
+    return render(request, 'proyecciones/revision.html', {
+        'proyecciones': proyecciones, 'periodos': Periodo.objects.all(), 'hoy': date.today(),
+    })
 
 @rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def revisar_proyeccion(request, pk):
@@ -113,7 +125,7 @@ def revisar_proyeccion(request, pk):
         messages.error(request, 'Esa proyección aún no ha sido enviada.')
         return redirect('proyecciones:revision')
     formset = AutorizadoFormSet(request.POST or None, queryset=proyeccion.lineas.select_related('unidad'))
-    if request.method == 'POST' and formset.is_valid():
+    if request.method == 'POST' and proyeccion.estado == EstadoProyeccion.ENVIADA and formset.is_valid():
         formset.save()
         messages.success(request, 'Cantidades autorizadas guardadas.')
         return redirect('proyecciones:revisar', pk=proyeccion.pk)
@@ -151,3 +163,33 @@ def abrir_periodo_vista(request):
     else:
         form = AbrirPeriodoForm(initial={'anio': date.today().year + 1})
     return render(request, 'proyecciones/abrir_periodo.html', {'form': form})
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def corregir_linea(request, pk):
+    """Los administradores cambian cualquier dato de una línea enviada o aprobada, con justificación."""
+    linea = get_object_or_404(Linea, pk=pk)
+    proyeccion = linea.proyeccion
+    if proyeccion.estado == EstadoProyeccion.BORRADOR:
+        messages.error(request, 'Esa proyección sigue en borrador: la edita el área.')
+        return redirect('proyecciones:revision')
+    antes = valores_linea(linea)  # la foto se toma ANTES de crear el formulario
+    form = CorreccionLineaForm(request.POST or None, instance=linea)
+    if request.method == 'POST' and form.is_valid():
+        cambios = guardar_correccion(form.save(commit=False), antes, request.user, form.cleaned_data['motivo'])
+        if cambios:
+            messages.success(request, f'Se guardaron {cambios} cambios con su justificación.')
+        else:
+            messages.info(request, 'No cambiaste ningún dato.')
+        return redirect('proyecciones:revisar', pk=proyeccion.pk)
+    titulo = 'Ajustar línea' if proyeccion.estado == EstadoProyeccion.APROBADA else 'Corregir línea'
+    return render(request, 'proyecciones/linea_form.html', {
+        'form': form, 'proyeccion': proyeccion, 'titulo': titulo, 'sugeridos': _nombres_sugeridos(),
+    })
+    
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def alternar_periodo_vista(request, pk):
+    periodo = get_object_or_404(Periodo, pk=pk)
+    if request.method == 'POST':  # solo con el botón, nunca con solo abrir un enlace
+        alternar_periodo(periodo, request.user)
+        messages.success(request, f'Periodo {periodo.anio}: {periodo.get_estado_display().lower()}.')
+    return redirect('proyecciones:revision')

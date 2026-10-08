@@ -164,4 +164,61 @@ class ProductoSugerido(models.Model):
     def __str__(self):
         return self.nombre
     
+class AccionBitacora(models.TextChoices):
+    ABRIR = 'abrir', 'Abrir periodo'
+    CERRAR = 'cerrar', 'Cerrar periodo'
+    CREAR = 'crear', 'Crear'
+    EDITAR = 'editar', 'Editar'
+    BORRAR = 'borrar', 'Borrar'
+    ENVIAR = 'enviar', 'Enviar'
+    CORREGIR = 'corregir', 'Corregir'
+    APROBAR = 'aprobar', 'Aprobar'
+    AJUSTAR = 'ajustar', 'Ajustar'
+
+
+class Bitacora(models.Model):
+    """Rastro de cada cambio. Solo se agregan filas: nunca se editan ni se borran."""
+
+    fecha_hora = models.DateTimeField('fecha y hora', auto_now_add=True)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name='usuario', on_delete=models.PROTECT, related_name='bitacora'
+    )
+    accion = models.CharField('acción', max_length=10, choices=AccionBitacora.choices)
+    tabla = models.CharField('tabla', max_length=40)
+    registro_id = models.PositiveIntegerField('registro')
+    campo = models.CharField('campo', max_length=40, blank=True)
+    valor_anterior = models.CharField('valor anterior', max_length=200, blank=True)
+    valor_nuevo = models.CharField('valor nuevo', max_length=200, blank=True)
+    motivo = models.TextField('motivo', blank=True)
+
+    class Meta:
+        verbose_name = 'registro de bitácora'
+        verbose_name_plural = 'bitácora'
+        ordering = ['-fecha_hora']
+
+    def __str__(self):
+        return f'{self.fecha_hora:%d/%m/%Y %H:%M} · {self.usuario} · {self.get_accion_display()}'
+    
+class Ajuste(models.Model):
+    """Cambio a una línea de una proyección ya aprobada. Guarda el valor aprobado y la justificación."""
+
+    linea = models.ForeignKey(Linea, verbose_name='línea', on_delete=models.PROTECT, related_name='ajustes')
+    campo = models.CharField('campo', max_length=40)
+    valor_aprobado = models.CharField('valor aprobado', max_length=200)
+    valor_nuevo = models.CharField('valor nuevo', max_length=200)
+    justificacion = models.TextField('justificación')
+    hecho_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name='hecho por', on_delete=models.PROTECT, related_name='ajustes'
+    )
+    fecha = models.DateTimeField('fecha', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'ajuste'
+        verbose_name_plural = 'ajustes'
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f'{self.linea} · {self.campo}: {self.valor_aprobado} → {self.valor_nuevo}'
+    
+    
     

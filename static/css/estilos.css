@@ -71,6 +71,7 @@ form.en-linea { display: inline; }
 .boton-borrar { width: auto; padding: 0.2rem 0.5rem; font-size: 0.85rem; background: #fff; color: var(--rojo); border: 1px solid var(--rojo); }
 
 .aviso { padding: 0.6rem; border-radius: 4px; }
+.aviso.info { background: var(--azul-claro); color: var(--azul); }
 .aviso.success { background: var(--azul-claro); color: var(--azul); }
 .aviso.error { border: 1px solid var(--rojo); color: var(--rojo); }
 
@@ -78,27 +79,6 @@ form.en-linea { display: inline; }
 
 .separado { margin-top: 0.75rem;}
 
-:root {
-    --primary: #1e3a8a;
-    --secondary: #1e3a8a;
-    --accent: #dbeafe;
-    --header-bg: #1e3a8a;
-    --header-color: #ffffff;
-    --header-branding-color: #ffffff;
-    --header-link-color: #ffffff;
-    --breadcrumbs-bg: #dbeafe;
-    --breadcrumbs-fg: #1e3a8a;
-    --breadcrumbs-link-fg: #1e3a8a;
-    --link-fg: #1e3a8a;
-    --link-hover-color: #172554;
-    --button-bg: #1e3a8a;
-    --button-hover-bg: #172554;
-    --default-button-bg: #1e3a8a;
-    --default-button-hover-bg: #172554;
-    --object-tools-bg: #1e3a8a;
-    --object-tools-hover-bg: #172554;
-    --delete-button-bg: #991b1b;
-    --delete-button-hover-bg: #7f1d1d;
-}
-
 .resumen { color: var(--azul); margin-bottom: 1rem; }
+
+.boton-chico { width: auto; padding: 0.2rem 0.5rem; font-size: 0.85rem; }
