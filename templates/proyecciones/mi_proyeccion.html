@@ -1,14 +1,11 @@
-{% load static %}
-<!doctype html>
-<html lang="es">
-<head>
-  <title>Mi proyección</title>
-  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
-</head>
-<body class="pagina">
+{% extends "base.html" %}
+
+{% block titulo %}Mi proyección · Gestión de suministros{% endblock %}
+
+{% block contenido %}
   <div class="tarjeta">
     <h1>Mi proyección</h1>
-        <table class="tabla">
+    <table class="tabla">
       <thead><tr><th>Año</th><th>Área</th><th>Estado</th><th class="num">Líneas</th><th></th></tr></thead>
       <tbody>
       {% for p in proyecciones %}
@@ -24,5 +21,4 @@
     </table>
     <p><a href="{% url 'inicio' %}">Volver al inicio</a></p>
   </div>
-</body>
-</html>
+{% endblock %}

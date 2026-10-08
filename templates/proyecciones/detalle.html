@@ -1,21 +1,15 @@
-{% load static %}
-<!doctype html>
-<html lang="es">
+{% extends "base.html" %}
 
-<head>
-  <title>Detalle de proyección</title>
-  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
-</head>
+{% block titulo %}Detalle de proyección · Gestión de suministros{% endblock %}
 
-<body class="pagina">
-
+{% block contenido %}
   <div class="tarjeta">
     <h1>{{ proyeccion.area.nombre }} · {{ proyeccion.periodo }} ({{ proyeccion.get_estado_display }})</h1>
     {% for m in messages %}
-    <p class="aviso {{ m.tags }}">{{ m }}</p>
+      <p class="aviso {{ m.tags }}">{{ m }}</p>
     {% endfor %}
     {% if proyeccion.fecha_envio %}
-    <p>Enviada el {{ proyeccion.fecha_envio|date:"d/m/Y H:i" }}</p>
+      <p>Enviada el {{ proyeccion.fecha_envio|date:"d/m/Y H:i" }}</p>
     {% endif %}
     <table class="tabla">
       <thead>
@@ -38,12 +32,12 @@
           <td class="num">{{ l.costo|floatformat:"2g" }}</td>
           <td>
             {% if proyeccion.estado == 'borrador' %}
-            <a href="{% url 'proyecciones:editar_linea' l.pk %}">Editar</a>
-            <form method="post" action="{% url 'proyecciones:borrar_linea' l.pk %}" class="en-linea"
-              onsubmit="return confirm('¿Borrar esta línea?');">
-              {% csrf_token %}
-              <button type="submit" class="boton-borrar">Borrar</button>
-            </form>
+              <a href="{% url 'proyecciones:editar_linea' l.pk %}">Editar</a>
+              <form method="post" action="{% url 'proyecciones:borrar_linea' l.pk %}" class="en-linea"
+                onsubmit="return confirm('¿Borrar esta línea?');">
+                {% csrf_token %}
+                <button type="submit" class="boton-borrar">Borrar</button>
+              </form>
             {% endif %}
           </td>
         </tr>
@@ -62,15 +56,17 @@
       </tfoot>
     </table>
     {% if proyeccion.estado == 'borrador' %}
-    <p><a href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a></p>
-    <form method="post" action="{% url 'proyecciones:enviar' proyeccion.pk %}"
-      onsubmit="return confirm('Después de enviar ya no podrás modificarla. ¿Enviar?');">
-      {% csrf_token %}
-      <button type="submit">Enviar proyección</button>
-    </form>
+      <p><a href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a></p>
+      {% if lineas %}
+        <form method="post" action="{% url 'proyecciones:enviar' proyeccion.pk %}"
+          onsubmit="return confirm('Después de enviar ya no podrás modificarla. ¿Enviar?');">
+          {% csrf_token %}
+          <button type="submit">Enviar proyección</button>
+        </form>
+      {% else %}
+        <p>Agrega al menos una línea para poder enviar.</p>
+      {% endif %}
     {% endif %}
     <p><a href="{% url 'proyecciones:mi_proyeccion' %}">Volver a Mi proyección</a></p>
   </div>
-</body>
-
-</html>
+{% endblock %}

@@ -1,22 +1,19 @@
-{% load static %}
-<!doctype html>
-<html lang="es">
-<head>
-  <title>Ingresar · Gestión de suministros</title>
-  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
-</head>
-<body class="centrado">
-  <div class="tarjeta">
-    <h1>Gestión de suministros</h1>
-    <form method="post">
-      {% csrf_token %}
-      {% if form.errors %}
-        <p class="error">Correo o contraseña incorrectos. Intenta de nuevo.</p>
-      {% endif %}
-      <p>Correo<br>{{ form.username }}</p>
-      <p>Contraseña<br>{{ form.password }}</p>
-      <button type="submit">Ingresar</button>
-    </form>
-  </div>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block titulo %}Ingresar · Gestión de suministros{% endblock %}
+{% block clase_body %}centrado{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  <h1>Gestión de suministros</h1>
+  <form method="post">
+    {% csrf_token %}
+    {% if form.errors %}
+    <p class="error">Correo o contraseña incorrectos. Intenta de nuevo.</p>
+    {% endif %}
+    <p>Correo<br>{{ form.username }}</p>
+    <p>Contraseña<br>{{ form.password }}</p>
+    <button type="submit">Ingresar</button>
+  </form>
+</div>
+{% endblock %}

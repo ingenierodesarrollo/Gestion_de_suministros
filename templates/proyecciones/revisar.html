@@ -1,57 +1,51 @@
-{% load static %}
-<!doctype html>
-<html lang="es">
+{% extends "base.html" %}
 
-<head>
-    <title>Inicio · Gestión de suministros</title>
-    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
-</head>
+{% block titulo %}Revisar proyección · Gestión de suministros{% endblock %}
 
-<body class="pagina">
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Revisar · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }} ({{ proyeccion.get_estado_display }})</h1>
+    {% for m in messages %}
+      <p class="aviso {{ m.tags }}">{{ m }}</p>
+    {% endfor %}
+    <form method="post">
+      {% csrf_token %}
+      {{ formset.management_form }}
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Unidad</th>
+            <th class="num">Pedido (año)</th>
+            <th class="num">Costo</th>
+            <th class="num">Autorizado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in formset %}
+          <tr>
+            <td>{{ f.id }}{{ f.instance.producto }}</td>
+            <td>{{ f.instance.unidad }}</td>
+            <td class="num">{{ f.instance.total_anual }}</td>
+            <td class="num">{{ f.instance.costo|floatformat:"2g" }}</td>
+            <td class="num">{{ f.cantidad_autorizada }}{{ f.cantidad_autorizada.errors }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit">Guardar autorizado</button>
+    </form>
 
-    <div class="tarjeta">
-        <h1>Revisar · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }} ({{ proyeccion.get_estado_display }})</h1>
-        {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
-        <form method="post">
-            {% csrf_token %}
-            {{ formset.management_form }}
-            <table class="tabla">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Unidad</th>
-                        <th class="num">Pedido (año)</th>
-                        <th class="num">Costo</th>
-                        <th class="num">Autorizado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for f in formset %}
-                    <tr>
-                        <td>{{ f.id }}{{ f.instance.producto }}</td>
-                        <td>{{ f.instance.unidad }}</td>
-                        <td class="num">{{ f.instance.total_anual }}</td>
-                        <td class="num">{{ f.instance.costo|floatformat:"2g" }}</td>
-                        <td class="num">{{ f.cantidad_autorizada }}{{ f.cantidad_autorizada.errors }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="submit">Guardar autorizado</button>
-        </form>
-
-        {% if proyeccion.estado == 'enviada' %}
-        <form method="post" action="{% url 'proyecciones:aprobar' proyeccion.pk %}" class="separado"
-            onsubmit="return confirm('¿Aprobar esta proyección?');">
-            {% csrf_token %}
-            <button type="submit">Aprobar proyección</button>
-        </form>
-        {% endif %}
-        {% if proyeccion.aprobada_por %}
-        <p>Aprobada por {{ proyeccion.aprobada_por.nombre }} el {{ proyeccion.fecha_aprobacion|date:"d/m/Y H:i" }}</p>
-        {% endif %}
-        <p><a href="{% url 'proyecciones:revision' %}">Volver a revisión</a></p>
-    </div>
-</body>
-
-</html>
+    {% if proyeccion.estado == 'enviada' %}
+      <form method="post" action="{% url 'proyecciones:aprobar' proyeccion.pk %}" class="separado"
+        onsubmit="return confirm('¿Aprobar esta proyección?');">
+        {% csrf_token %}
+        <button type="submit">Aprobar proyección</button>
+      </form>
+    {% endif %}
+    {% if proyeccion.aprobada_por %}
+      <p>Aprobada por {{ proyeccion.aprobada_por.nombre }} el {{ proyeccion.fecha_aprobacion|date:"d/m/Y H:i" }}</p>
+    {% endif %}
+    <p><a href="{% url 'proyecciones:revision' %}">Volver a revisión</a></p>
+  </div>
+{% endblock %}

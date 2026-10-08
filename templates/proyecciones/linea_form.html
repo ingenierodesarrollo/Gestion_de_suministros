@@ -1,14 +1,10 @@
-{% load static %}
-<!doctype html>
-<html lang="es">
-<head>
-  <title>Agregar linea</title>
-  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
-</head>
-<body class="pagina">
+{% extends "base.html" %}
 
+{% block titulo %}{{ titulo }} · Gestión de suministros{% endblock %}
+
+{% block contenido %}
   <div class="tarjeta">
-    <h1>{{ titulo }} ·{{ proyeccion.area.nombre }} {{ proyeccion.periodo }}</h1>
+    <h1>{{ titulo }} · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }}</h1>
     <form method="post">
       {% csrf_token %}
       <div class="rejilla">
@@ -20,5 +16,4 @@
     </form>
     <p><a href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a></p>
   </div>
-</body>
-</html>    
+{% endblock %}
