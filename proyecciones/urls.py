@@ -17,4 +17,5 @@ urlpatterns = [
     path('abrir-periodo/', views.abrir_periodo_vista, name='abrir_periodo'),
     path('linea/<int:pk>/corregir/', views.corregir_linea, name='corregir_linea'),
     path('periodo/<int:pk>/alternar/', views.alternar_periodo_vista, name='alternar_periodo'),
+    path('bitacora/', views.bitacora, name='bitacora'),
 ]

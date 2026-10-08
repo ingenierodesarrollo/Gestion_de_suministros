@@ -7,6 +7,7 @@
     <h1>Revisión de proyecciones</h1>
     {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
     <p><a href="{% url 'proyecciones:abrir_periodo' %}">Abrir periodo</a></p>
+        <p><a href="{% url 'proyecciones:bitacora' %}">Ver bitácora</a></p>
     <h2>Periodos</h2>
     <table class="tabla">
       <thead><tr><th>Año</th><th>Fecha límite</th><th>Estado</th><th></th></tr></thead>

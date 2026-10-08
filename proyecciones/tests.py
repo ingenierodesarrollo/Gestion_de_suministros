@@ -280,3 +280,18 @@ class BitacoraTest(BaseProyeccionTest):
         self.client.post(reverse('proyecciones:revisar', args=[self.proy_urg.pk]), datos)
         fila = Bitacora.objects.get(accion='editar', registro_id=linea.pk)
         self.assertEqual((fila.campo, fila.valor_anterior, fila.valor_nuevo), ('cantidad_autorizada', '', '5'))
+    
+    def test_pantalla_bitacora_la_ve_el_admin_con_nombres_legibles(self):
+        self.crear_linea(self.proy_urg, cantidad_autorizada=0)
+        self.client.force_login(self.coord_urg)
+        self.client.force_login(self.coord_urg)
+        self.client.post(reverse('proyecciones:enviar', args=[self.proy_urg.pk]))
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(reverse('proyecciones:bitacora'))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, f'Proyección {self.proy_urg.area.nombre}')
+
+    def test_coordinador_no_ve_la_bitacora(self):
+        self.client.force_login(self.coord_urg)
+        respuesta = self.client.get(reverse('proyecciones:bitacora'))
+        self.assertEqual(respuesta.status_code, 403)

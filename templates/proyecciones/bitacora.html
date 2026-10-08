@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block titulo %}Bitácora · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Bitácora</h1>
+    <p>Últimos 200 movimientos. Solo se agregan, nunca se editan ni se borran.</p>
+    <table class="tabla">
+      <thead>
+        <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Sobre qué</th><th>Dato</th><th>Antes</th><th>Después</th><th>Motivo</th></tr>
+      </thead>
+      <tbody>
+        {% for f in filas %}
+        <tr>
+          <td>{{ f.fecha_hora|date:"d/m/Y H:i" }}</td>
+          <td>{{ f.usuario }}</td>
+          <td>{{ f.get_accion_display }}</td>
+          <td>{{ f.objeto }}</td>
+          <td>{{ f.campo_legible|default:"—" }}</td>
+          <td>{{ f.valor_anterior|default:"—" }}</td>
+          <td>{{ f.valor_nuevo|default:"—" }}</td>
+          <td>{{ f.motivo|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">Aún no hay movimientos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p><a href="{% url 'proyecciones:revision' %}">Volver a revisión</a></p>
+  </div>
+{% endblock %}

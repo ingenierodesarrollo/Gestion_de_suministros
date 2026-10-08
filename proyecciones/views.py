@@ -6,9 +6,9 @@ from django.contrib import messages
 from django.utils import timezone
 from datetime import date
 
-from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo, AccionBitacora
+from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo, AccionBitacora, Bitacora
 from .forms import AutorizadoFormSet ,AbrirPeriodoForm, CorreccionLineaForm,LineaForm
-from .servicios import abrir_periodo, guardar_correccion, valores_linea, alternar_periodo, registrar, registrar_cambios
+from .servicios import abrir_periodo, guardar_correccion, valores_linea, alternar_periodo, registrar, registrar_cambios, nombre_registro, nombre_campo
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -205,3 +205,12 @@ def alternar_periodo_vista(request, pk):
         alternar_periodo(periodo, request.user)
         messages.success(request, f'Periodo {periodo.anio}: {periodo.get_estado_display().lower()}.')
     return redirect('proyecciones:revision')
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def bitacora(request):
+    """Los últimos 200 movimientos, con nombres legibles."""
+    filas = Bitacora.objects.select_related('usuario')[:200]
+    for fila in filas:
+        fila.objeto = nombre_registro(fila.tabla, fila.registro_id)
+        fila.campo_legible = nombre_campo(fila.campo) if fila.campo else ''
+    return render(request, 'proyecciones/bitacora.html', {'filas': filas})

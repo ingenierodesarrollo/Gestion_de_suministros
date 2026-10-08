@@ -92,4 +92,29 @@ def registrar_cambios(usuario, accion, linea, antes):
         valor_ahora = getattr(linea, campo)
         if valor_ahora != valor_antes:
             registrar(usuario, accion, linea, campo, valor_antes, valor_ahora)
+            
+def nombre_registro(tabla, registro_id):
+    """Convierte tabla + número en un texto legible."""
+    if tabla == 'periodo':
+        periodo = Periodo.objects.filter(pk=registro_id).first()
+        return f'Periodo {periodo.anio}' if periodo else f'Periodo n.º {registro_id}'
+    if tabla == 'proyeccionarea':
+        proy = ProyeccionArea.objects.select_related('area', 'periodo').filter(pk=registro_id).first()
+        return f'Proyección {proy.area.nombre} {proy.periodo.anio}' if proy else f'Proyección n.º {registro_id}'
+    if tabla == 'linea':
+        linea = Linea.objects.select_related('proyeccion__area', 'proyeccion__periodo').filter(pk=registro_id).first()
+        if linea:
+            return f'{linea.producto} ({linea.proyeccion.area.nombre} {linea.proyeccion.periodo.anio})'
+        return f'Línea n.º {registro_id} (ya borrada)'
+    return f'{tabla} n.º {registro_id}'
+
+
+def nombre_campo(campo):
+    """Nombre del campo como lo ve el usuario (ej. 'ene' -> 'enero')."""
+    for modelo in (Linea, ProyeccionArea):
+        try:
+            return str(modelo._meta.get_field(campo).verbose_name).capitalize()
+        except Exception:
+            continue
+    return campo
     
