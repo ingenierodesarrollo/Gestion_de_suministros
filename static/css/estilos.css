@@ -70,9 +70,9 @@ button.salir { background: #fff; color: var(--rojo); border: 1px solid var(--roj
 form.en-linea { display: inline; }
 .boton-borrar { width: auto; padding: 0.2rem 0.5rem; font-size: 0.85rem; background: #fff; color: var(--rojo); border: 1px solid var(--rojo); }
 
-.aviso { padding: 0.6 rem; border-radius: 4px; }
+.aviso { padding: 0.6rem; border-radius: 4px; }
 .aviso.success { background: var(--azul-claro); color: var(--azul); }
-aviso.error { border: 1px solid var(--rojo); color: var(--rojo); }
+.aviso.error { border: 1px solid var(--rojo); color: var(--rojo); }
 
 .tabla input { width: 6rem; padding: 0.3rem; }
 

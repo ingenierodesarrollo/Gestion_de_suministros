@@ -4,9 +4,11 @@ from cuentas.permisos import rol_requerido
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.utils import timezone
+from datetime import date
 
 from .models import EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea
-from .forms import AutorizadoFormSet ,LineaForm
+from .forms import AutorizadoFormSet ,AbrirPeriodoForm,LineaForm
+from .servicios import abrir_periodo
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -75,7 +77,7 @@ def editar_linea(request, pk):
         return redirect('proyecciones:detalle', pk=proyeccion.pk)
     return render(request, 'proyecciones/linea_form.html',
                   {'form': form, 'proyeccion': proyeccion, 'titulo': 'Editar línea',
-                   'sugerdos': _nombres_sugeridos()})
+                   'sugeridos': _nombres_sugeridos()})
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -130,3 +132,22 @@ def aprobar_proyeccion(request, pk):
             proyeccion.save(update_fields=['estado', 'aprobada_por', 'fecha_aprobacion'])
             messages.success(request, 'Proyección aprobada.')
     return redirect('proyecciones:revisar', pk=proyeccion.pk)
+
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)   
+def abrir_periodo_vista(request):
+    if request.method == 'POST':
+        form = AbrirPeriodoForm(request.POST)
+        if form.is_valid():
+            periodo, creadas = abrir_periodo(
+            form.cleaned_data['anio'],
+            form.cleaned_data['fecha_limite'],
+            request.user,)
+            messages.success(
+                request,
+                f'Periodo {periodo.anio}: se crearon {creadas} proyecciones en borrador.',
+            )
+            return redirect('proyecciones:revision')
+    else:
+        form = AbrirPeriodoForm(initial={'anio': date.today().year + 1})
+    return render(request, 'proyecciones/abrir_periodo.html', {'form': form})

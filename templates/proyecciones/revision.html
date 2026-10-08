@@ -5,6 +5,8 @@
 {% block contenido %}
   <div class="tarjeta">
     <h1>Revisión de proyecciones</h1>
+    {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
+    <p><a href="{% url 'proyecciones:abrir_periodo' %}">Abrir periodo</a></p>
     <table class="tabla">
       <thead>
         <tr>

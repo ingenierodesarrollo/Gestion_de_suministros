@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.test import TestCase
@@ -177,3 +177,29 @@ class BorrarLineaTest(BaseProyeccionTest):
         self.client.force_login(self.coord_lab)
         self.client.post(reverse('proyecciones:borrar_linea', args=[linea.pk]))
         self.assertTrue(Linea.objects.filter(pk=linea.pk).exists())
+        
+class AbrirPeriodoTest(BaseProyeccionTest):
+
+    def datos(self, anio):
+        return {'anio': anio, 'fecha_limite': date.today() + timedelta(days=30)}
+
+    def test_crea_borradores_solo_de_areas_activas(self):
+        Area.objects.create(nombre='Cerrada', codigo_area='CER', activa=False)
+        self.client.force_login(self.admin)
+        self.client.post(reverse('proyecciones:abrir_periodo'), self.datos(2028))
+        proyecciones = ProyeccionArea.objects.filter(periodo__anio=2028)
+        self.assertEqual(proyecciones.count(), 2)  # Urgencias y Laboratorio, no la inactiva
+        self.assertTrue(all(p.estado == EstadoProyeccion.BORRADOR for p in proyecciones))
+        self.assertEqual(proyecciones.get(area=self.urgencias).responsable, self.coord_urg)
+
+    def test_reabrir_solo_crea_lo_que_falta(self):
+        self.crear_linea(self.proy_urg)  # 2027 ya tiene Urgencias con una línea
+        self.client.force_login(self.admin)
+        self.client.post(reverse('proyecciones:abrir_periodo'), self.datos(2027))
+        self.assertEqual(ProyeccionArea.objects.filter(periodo=self.periodo).count(), 2)  # solo se agregó Laboratorio
+        self.assertEqual(self.proy_urg.lineas.count(), 1)  # lo existente no se tocó
+
+    def test_coordinador_no_abre_periodo(self):
+        self.client.force_login(self.coord_urg)
+        respuesta = self.client.get(reverse('proyecciones:abrir_periodo'))
+        self.assertEqual(respuesta.status_code, 403)
