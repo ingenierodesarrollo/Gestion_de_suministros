@@ -10,6 +10,10 @@ class LineaForm(forms.ModelForm):
     class Meta:
         model = Linea
         fields = ['producto', 'dependencia', 'serie', 'unidad', *Linea.MESES, 'precio_unitario_est']
+        widgets = {
+            'producto': forms.TextInput(attrs={'list': 'productos-sugeridos',
+                        'autocomplete': 'off'   })
+        }
         
 AutorizadoFormSet = modelformset_factory(Linea, fields=['cantidad_autorizada'], extra = 0) 
        

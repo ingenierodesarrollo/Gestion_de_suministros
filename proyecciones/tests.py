@@ -7,7 +7,7 @@ from django.urls import reverse
 from areas.models import Area
 from cuentas.models import Rol, Usuario
 
-from .models import EstadoProyeccion, Linea, Periodo, ProyeccionArea, UnidadMedida
+from .models import EstadoProyeccion, Linea, Periodo, ProductoSugerido, ProyeccionArea, UnidadMedida
 
 
 class BaseProyeccionTest(TestCase):
@@ -141,4 +141,14 @@ class AprobarTest(BaseProyeccionTest):
         self.assertEqual(respuesta.status_code, 403)
         self.proy_urg.refresh_from_db()
         self.assertEqual(self.proy_urg.estado, EstadoProyeccion.ENVIADA)
+        
+class ProductosSugeridosTest(BaseProyeccionTest):
+
+    def test_formulario_ofrece_solo_productos_activos(self):
+        ProductoSugerido.objects.create(nombre='Gasas esteriles')
+        ProductoSugerido.objects.create(nombre='Producto viejo', activo=False)
+        self.client.force_login(self.coord_urg)
+        respuesta = self.client.get(reverse('proyecciones:agregar_linea', args=[self.proy_urg.pk]))
+        self.assertContains(respuesta, 'Gasas esteriles')
+        self.assertNotContains(respuesta, 'Producto viejo')
     

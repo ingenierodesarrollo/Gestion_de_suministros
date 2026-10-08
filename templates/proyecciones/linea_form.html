@@ -13,6 +13,11 @@
           <label>{{ campo.label|capfirst }}{{ campo }}{{ campo.errors }}</label>
         {% endfor %}
       </div>
+      <datalist id="productos-sugeridos">
+  {% for nombre in sugeridos %}
+    <option value="{{ nombre }}">
+  {% endfor %}
+</datalist>
       <p class="resumen">Total del año: <strong id="total-anual">0</strong> · Costo 
         estimado: <strong id="costo-estimado">0,00</strong></p>
       <button type="submit">Guardar línea</button>

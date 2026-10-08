@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.utils import timezone
 
-from .models import EstadoProyeccion, Linea, ProyeccionArea
+from .models import EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea
 from .forms import AutorizadoFormSet ,LineaForm
 
 
@@ -35,6 +35,11 @@ def _obtener_proyeccion(request, pk):
         raise PermissionDenied
     return proyeccion
 
+def _nombres_sugeridos():
+    """Nombres activos que se ofrecen como sugerencia en el campo producto."""
+    return ProductoSugerido.objects.filter(activo=True).values_list('nombre',
+flat=True)
+
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def agregar_linea(request, pk):
@@ -48,7 +53,8 @@ def agregar_linea(request, pk):
         linea.save()
         return redirect('proyecciones:detalle', pk=proyeccion.pk)
     return render(request, 'proyecciones/linea_form.html',
-                  {'form': form, 'proyeccion': proyeccion, 'titulo': 'Agregar línea'})
+                  {'form': form, 'proyeccion': proyeccion, 'titulo': 'Agregar línea',
+                   'sugeridos': _nombres_sugeridos()})
 
 
 def _linea_editable(request, pk):
@@ -68,7 +74,8 @@ def editar_linea(request, pk):
         form.save()
         return redirect('proyecciones:detalle', pk=proyeccion.pk)
     return render(request, 'proyecciones/linea_form.html',
-                  {'form': form, 'proyeccion': proyeccion, 'titulo': 'Editar línea'})
+                  {'form': form, 'proyeccion': proyeccion, 'titulo': 'Editar línea',
+                   'sugerdos': _nombres_sugeridos()})
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
