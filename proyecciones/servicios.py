@@ -9,7 +9,7 @@ from cuentas.models import Rol, Usuario
 def abrir_periodo(anio, fecha_limite, usuario):
     """Crea el periodo (si no existe) y una proyección en borrador por cada área activa.
     Lo que ya existe no se toca. Devuelve (periodo, cantidad_creadas)."""
-    periodo, _ = Periodo.objects.get_or_create(
+    periodo, periodo_nuevo = Periodo.objects.get_or_create(
         anio=anio,
         defaults={
             'fecha_apertura': date.today(),
@@ -27,6 +27,8 @@ def abrir_periodo(anio, fecha_limite, usuario):
         )
         if nueva:
             creadas += 1
+    if periodo_nuevo or creadas:
+        registrar(usuario, AccionBitacora.ABRIR, periodo, 'proyecciones creadas', None, creadas)
     return periodo, creadas
 
 CAMPOS_LINEA = ['producto', 'dependencia', 'serie', 'unidad', *Linea.MESES,
@@ -83,3 +85,11 @@ def alternar_periodo(periodo, usuario):
     periodo.save(update_fields=['estado'])
     registrar(usuario, accion, periodo, 'estado', antes, periodo.estado)
     return periodo
+
+def registrar_cambios(usuario, accion, linea, antes):
+    """Anota en la bitácora cada dato de la línea que cambió respecto a la foto 'antes'."""
+    for campo, valor_antes in antes.items():
+        valor_ahora = getattr(linea, campo)
+        if valor_ahora != valor_antes:
+            registrar(usuario, accion, linea, campo, valor_antes, valor_ahora)
+    

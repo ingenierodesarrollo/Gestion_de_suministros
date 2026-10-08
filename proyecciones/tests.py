@@ -234,3 +234,49 @@ class PeriodoCerradoTest(BaseProyeccionTest):
         self.assertEqual(respuesta.status_code, 403)
         self.periodo.refresh_from_db()
         self.assertEqual(self.periodo.estado, EstadoPeriodo.ABIERTO)
+        
+class BitacoraTest(BaseProyeccionTest):
+
+    def test_crear_editar_y_borrar_linea_dejan_rastro(self):
+        self.client.force_login(self.coord_urg)
+        datos = {'producto': 'Guantes', 'dependencia': '', 'serie': '', 'unidad': self.unidad.pk,
+                 **{mes: 0 for mes in Linea.MESES}, 'precio_unitario_est': '1500'}
+        self.client.post(reverse('proyecciones:agregar_linea', args=[self.proy_urg.pk]), datos)
+        linea = self.proy_urg.lineas.get()
+        self.assertTrue(Bitacora.objects.filter(accion='crear', registro_id=linea.pk).exists())
+        datos['ene'] = 7
+        self.client.post(reverse('proyecciones:editar_linea', args=[linea.pk]), datos)
+        fila = Bitacora.objects.get(accion='editar', registro_id=linea.pk)
+        self.assertEqual((fila.campo, fila.valor_anterior, fila.valor_nuevo), ('ene', '0', '7'))
+        self.client.post(reverse('proyecciones:borrar_linea', args=[linea.pk]))
+        self.assertTrue(Bitacora.objects.filter(accion='borrar', registro_id=linea.pk).exists())
+
+    def test_enviar_y_aprobar_dejan_rastro(self):
+        self.crear_linea(self.proy_urg, cantidad_autorizada=0)
+        self.client.force_login(self.coord_urg)
+        self.client.post(reverse('proyecciones:enviar', args=[self.proy_urg.pk]))
+        self.client.force_login(self.admin)
+        self.client.post(reverse('proyecciones:aprobar', args=[self.proy_urg.pk]))
+        for accion in ('enviar', 'aprobar'):
+            self.assertTrue(Bitacora.objects.filter(accion=accion, tabla='proyeccionarea', registro_id=self.proy_urg.pk).exists())
+
+    def test_abrir_periodo_deja_rastro(self):
+        self.client.force_login(self.admin)
+        self.client.post(reverse('proyecciones:abrir_periodo'), {'anio': 2030, 'fecha_limite': date.today() + timedelta(days=30)})
+        periodo = Periodo.objects.get(anio=2030)
+        fila = Bitacora.objects.get(accion='abrir', tabla='periodo', registro_id=periodo.pk)
+        self.assertEqual(fila.valor_nuevo, '2')  # Urgencias y Laboratorio
+
+    def test_guardar_autorizado_deja_rastro(self):
+        linea = self.crear_linea(self.proy_urg)
+        self.proy_urg.estado = EstadoProyeccion.ENVIADA
+        self.proy_urg.save()
+        self.client.force_login(self.admin)
+        datos = {
+            'form-TOTAL_FORMS': '1', 'form-INITIAL_FORMS': '1',
+            'form-MIN_NUM_FORMS': '0', 'form-MAX_NUM_FORMS': '1000',
+            'form-0-id': linea.pk, 'form-0-cantidad_autorizada': '5',
+        }
+        self.client.post(reverse('proyecciones:revisar', args=[self.proy_urg.pk]), datos)
+        fila = Bitacora.objects.get(accion='editar', registro_id=linea.pk)
+        self.assertEqual((fila.campo, fila.valor_anterior, fila.valor_nuevo), ('cantidad_autorizada', '', '5'))

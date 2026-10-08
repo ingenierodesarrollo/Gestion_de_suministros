@@ -6,9 +6,9 @@ from django.contrib import messages
 from django.utils import timezone
 from datetime import date
 
-from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo
+from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo, AccionBitacora
 from .forms import AutorizadoFormSet ,AbrirPeriodoForm, CorreccionLineaForm,LineaForm
-from .servicios import abrir_periodo, guardar_correccion, valores_linea, alternar_periodo
+from .servicios import abrir_periodo, guardar_correccion, valores_linea, alternar_periodo, registrar, registrar_cambios
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -61,6 +61,7 @@ def agregar_linea(request, pk):
         linea = form.save(commit=False)  # aún no guarda: falta decirle a qué proyección pertenece
         linea.proyeccion = proyeccion
         linea.save()
+        registrar(request.user, AccionBitacora.CREAR, linea, 'producto', None, linea.producto)
         return redirect('proyecciones:detalle', pk=proyeccion.pk)
     return render(request, 'proyecciones/linea_form.html',
                   {'form': form, 'proyeccion': proyeccion, 'titulo': 'Agregar línea',
@@ -80,9 +81,11 @@ def _linea_editable(request, pk):
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def editar_linea(request, pk):
     linea, proyeccion = _linea_editable(request, pk)
+    antes = valores_linea(linea)  # la foto se toma ANTES de crear el formulario
     form = LineaForm(request.POST or None, instance=linea)  # instance = llena el formulario con lo que ya tiene
     if request.method == 'POST' and form.is_valid():
         form.save()
+        registrar_cambios(request.user, AccionBitacora.EDITAR, linea, antes)
         return redirect('proyecciones:detalle', pk=proyeccion.pk)
     return render(request, 'proyecciones/linea_form.html',
                   {'form': form, 'proyeccion': proyeccion, 'titulo': 'Editar línea',
@@ -93,6 +96,7 @@ def editar_linea(request, pk):
 def borrar_linea(request, pk):
     linea, proyeccion = _linea_editable(request, pk)
     if request.method == 'POST':  # solo borra con el botón, nunca con solo abrir un enlace
+        registrar(request.user, AccionBitacora.BORRAR, linea, 'producto', linea.producto, None)
         linea.delete()
     return redirect('proyecciones:detalle', pk=proyeccion.pk)
 
@@ -107,6 +111,8 @@ def enviar_proyeccion(request, pk):
             proyeccion.estado = EstadoProyeccion.ENVIADA
             proyeccion.fecha_envio = timezone.now()
             proyeccion.save(update_fields=['estado', 'fecha_envio'])
+            registrar(request.user, AccionBitacora.ENVIAR, proyeccion, 'estado', EstadoProyeccion.BORRADOR, 
+                      EstadoProyeccion.ENVIADA)
             messages.success(request, 'Proyeccion enviada. Ya no se puede modificar')
     return redirect('proyecciones:detalle', pk=proyeccion.pk)
 
@@ -126,6 +132,10 @@ def revisar_proyeccion(request, pk):
         return redirect('proyecciones:revision')
     formset = AutorizadoFormSet(request.POST or None, queryset=proyeccion.lineas.select_related('unidad'))
     if request.method == 'POST' and proyeccion.estado == EstadoProyeccion.ENVIADA and formset.is_valid():
+        for form in formset:
+            if form.has_changed():
+                registrar(request.user, AccionBitacora.EDITAR, form.instance, 'cantidad_autorizada',
+                          form.initial.get('cantidad_autorizada'), form.cleaned_data['cantidad_autorizada'])
         formset.save()
         messages.success(request, 'Cantidades autorizadas guardadas.')
         return redirect('proyecciones:revisar', pk=proyeccion.pk)
@@ -142,6 +152,8 @@ def aprobar_proyeccion(request, pk):
             proyeccion.aprobada_por = request.user  # queda registrado quién aprobó
             proyeccion.fecha_aprobacion = timezone.now()
             proyeccion.save(update_fields=['estado', 'aprobada_por', 'fecha_aprobacion'])
+            registrar(request.user, AccionBitacora.APROBAR, proyeccion, 'estado', EstadoProyeccion.ENVIADA, 
+                      EstadoProyeccion.APROBADA)     
             messages.success(request, 'Proyección aprobada.')
     return redirect('proyecciones:revisar', pk=proyeccion.pk)
 
