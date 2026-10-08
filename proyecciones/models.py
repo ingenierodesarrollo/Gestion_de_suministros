@@ -103,6 +103,7 @@ class Linea(models.Model):
         ProyeccionArea, verbose_name='proyección', on_delete=models.CASCADE, related_name='lineas'
     )
     producto = models.CharField('equipo / producto / servicio', max_length=150)
+    dependencia = models.CharField('dependencia', max_length=100, blank=True)
     serie = models.CharField('serie', max_length=100, blank=True)
     unidad = models.ForeignKey(UnidadMedida, verbose_name='unidad', on_delete=models.PROTECT)
 
@@ -148,3 +149,19 @@ class Linea(models.Model):
         if self.precio_unitario_est is None:
             return 0
         return self.total_anual * self.precio_unitario_est
+    
+class ProductoSugerido(models.Model):
+    """Nombre de producto que se ofrece como sugerencia al escribir una línea. La línea sigue siendo texto libre."""
+
+    nombre = models.CharField('nombre', max_length=150, unique=True)
+    activo = models.BooleanField('activo', default=True)
+
+    class Meta:
+        verbose_name = 'producto sugerido'
+        verbose_name_plural = 'productos sugeridos'
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+    
+    

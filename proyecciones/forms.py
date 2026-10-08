@@ -9,7 +9,7 @@ class LineaForm(forms.ModelForm):
 
     class Meta:
         model = Linea
-        fields = ['producto', 'serie', 'unidad', *Linea.MESES, 'precio_unitario_est']
+        fields = ['producto', 'dependencia', 'serie', 'unidad', *Linea.MESES, 'precio_unitario_est']
         
 AutorizadoFormSet = modelformset_factory(Linea, fields=['cantidad_autorizada'], extra = 0) 
        

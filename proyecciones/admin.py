@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Linea, Periodo, ProyeccionArea, UnidadMedida
+from .models import Linea, Periodo, ProductoSugerido, ProyeccionArea, UnidadMedida
 
 @admin.register(Periodo)
 class PeriodoAdmin(admin.ModelAdmin):
@@ -22,3 +22,9 @@ class ProyeccionAreaAdmin(admin.ModelAdmin):
     list_display = ('area','periodo','estado','responsable')
     list_filter = ('periodo','estado')   
     inlines = [LineaInline]
+    
+@admin.register(ProductoSugerido)
+class ProductoSugeridoAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'activo')
+    list_filter = ('activo',)
+    search_fields = ('nombre',)

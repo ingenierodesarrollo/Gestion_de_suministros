@@ -15,6 +15,7 @@
       <thead>
         <tr>
           <th>Producto</th>
+          <th>Dependencia</th>
           <th>Unidad</th>
           <th class="num">Total año</th>
           <th class="num">Precio est.</th>
@@ -26,6 +27,7 @@
         {% for l in lineas %}
         <tr>
           <td>{{ l.producto }}</td>
+          <td>{{ l.dependencia|default:"—" }}</td>
           <td>{{ l.unidad }}</td>
           <td class="num">{{ l.total_anual }}</td>
           <td class="num">{{ l.precio_unitario_est|floatformat:"2g" }}</td>
@@ -43,13 +45,13 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="6">Esta proyección aún no tiene líneas.</td>
+          <td colspan="7">Esta proyección aún no tiene líneas.</td>
         </tr>
         {% endfor %}
       </tbody>
       <tfoot>
         <tr>
-          <td colspan="4">Costo total</td>
+          <td colspan="5">Costo total</td>
           <td class="num">{{ costo_total|floatformat:"2g" }}</td>
           <td></td>
         </tr>

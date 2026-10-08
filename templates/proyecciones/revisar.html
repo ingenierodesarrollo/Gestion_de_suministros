@@ -15,6 +15,7 @@
         <thead>
           <tr>
             <th>Producto</th>
+            <th>Dependencia</th>
             <th>Unidad</th>
             <th class="num">Pedido (año)</th>
             <th class="num">Costo</th>
@@ -25,6 +26,7 @@
           {% for f in formset %}
           <tr>
             <td>{{ f.id }}{{ f.instance.producto }}</td>
+            <td>{{ f.instance.dependencia|default:"—" }}</td>
             <td>{{ f.instance.unidad }}</td>
             <td class="num">{{ f.instance.total_anual }}</td>
             <td class="num">{{ f.instance.costo|floatformat:"2g" }}</td>
