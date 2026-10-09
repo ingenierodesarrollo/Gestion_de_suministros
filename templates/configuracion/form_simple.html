@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  {% include "configuracion/menu_admin.html" %}
+  <div class="tarjeta">
+    <h1>{{ titulo }}</h1>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Guardar</button>
+    </form>
+    <p class="separado"><a href="{% url volver %}">Cancelar</a></p>
+  </div>
+{% endblock %}

@@ -82,3 +82,7 @@ form.en-linea { display: inline; }
 .resumen { color: var(--azul); margin-bottom: 1rem; }
 
 .boton-chico { width: auto; padding: 0.2rem 0.5rem; font-size: 0.85rem; }
+
+.menu-admin { display: flex; flex-wrap: wrap; gap: 0.25rem; background: var(--azul); border-radius: 8px; padding: 0.5rem; margin-bottom: 1rem; }
+.menu-admin a { color: #fff; text-decoration: none; padding: 0.4rem 0.8rem; border-radius: 4px; }
+.menu-admin a:hover { background: #0f1a3d; }

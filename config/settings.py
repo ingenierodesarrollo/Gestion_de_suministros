@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'areas',
     'cuentas',
     'proyecciones',
+    'configuracion',
 ]
 
 MIDDLEWARE = [
