@@ -2,11 +2,14 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
 from areas.models import Area
-from cuentas.models import Rol
+from cuentas.models import Rol, Usuario
 from cuentas.permisos import rol_requerido
 
 from proyecciones.models import ProductoSugerido, UnidadMedida
-from .forms import AreaForm, ProductoForm, UnidadForm
+from .forms import AreaForm, ProductoForm, UnidadForm, UsuarioCrearForm, UsuarioEditarForm
+
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import SetPasswordForm
 
 
 
@@ -82,3 +85,51 @@ def producto_alternar(request, pk):
 @rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def panel(request):
     return render(request, 'configuracion/panel.html')
+
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def usuarios_lista(request):
+    usuarios = Usuario.objects.select_related('area')
+    return render(request, 'configuracion/usuarios_lista.html', {'usuarios': usuarios})
+
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def usuario_crear(request):
+    form = UsuarioCrearForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Usuario creado.')
+        return redirect('configuracion:usuarios')
+    return render(request, 'configuracion/form_simple.html', {
+        'form': form, 'titulo': 'Nuevo usuario', 'volver': 'configuracion:usuarios'})
+
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def usuario_editar(request, pk):
+    usuario = get_object_or_404(Usuario, pk=pk)
+    rol_original = usuario.rol
+    form = UsuarioEditarForm(request.POST or None, instance=usuario)
+    if request.method == 'POST' and form.is_valid():
+        datos = form.cleaned_data
+        if usuario.pk == request.user.pk and (not datos['activo'] or datos['rol'] != rol_original):
+            form.add_error(None, 'No puedes desactivarte ni cambiar tu propio rol.')
+        else:
+            form.save()
+            messages.success(request, 'Usuario guardado.')
+            return redirect('configuracion:usuarios')
+    return render(request, 'configuracion/form_simple.html', {
+        'form': form, 'titulo': 'Editar usuario', 'volver': 'configuracion:usuarios'})
+
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def usuario_clave(request, pk):
+    usuario = get_object_or_404(Usuario, pk=pk)
+    form = SetPasswordForm(usuario, request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        if usuario.pk == request.user.pk:
+            update_session_auth_hash(request, usuario)  # para no cerrarle la sesión a quien se cambia su propia clave
+        messages.success(request, f'Clave nueva guardada para {usuario.nombre}.')
+        return redirect('configuracion:usuarios')
+    return render(request, 'configuracion/form_simple.html', {
+        'form': form, 'titulo': f'Clave nueva para {usuario.nombre}', 'volver': 'configuracion:usuarios'})
