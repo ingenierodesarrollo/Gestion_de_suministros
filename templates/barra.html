@@ -1,0 +1,26 @@
+{% if user.is_authenticated %}
+<header class="barra">
+  <a class="marca" href="{% url 'inicio' %}">Suministros</a>
+  <nav>
+    {% if user.es_coordinador %}
+      <a href="{% url 'proyecciones:mi_proyeccion' %}">Mi proyección</a>
+    {% endif %}
+    {% if user.es_administrador or user.es_desarrollador %}
+      <a href="{% url 'proyecciones:revision' %}" class="{% if request.resolver_match.view_name == 'proyecciones:revision' %}activo{% endif %}">Revisión</a>
+      <a href="{% url 'proyecciones:abrir_periodo' %}" class="{% if request.resolver_match.view_name == 'proyecciones:abrir_periodo' %}activo{% endif %}">Abrir periodo</a>
+      <a href="{% url 'proyecciones:bitacora' %}" class="{% if request.resolver_match.view_name == 'proyecciones:bitacora' %}activo{% endif %}">Bitácora</a>
+      <a href="{% url 'configuracion:areas' %}" class="{% if request.resolver_match.view_name == 'configuracion:areas' %}activo{% endif %}">Áreas</a>
+      <a href="{% url 'configuracion:unidades' %}" class="{% if request.resolver_match.view_name == 'configuracion:unidades' %}activo{% endif %}">Unidades</a>
+      <a href="{% url 'configuracion:productos' %}" class="{% if request.resolver_match.view_name == 'configuracion:productos' %}activo{% endif %}">Productos sugeridos</a>
+      <a href="{% url 'configuracion:usuarios' %}" class="{% if request.resolver_match.view_name == 'configuracion:usuarios' %}activo{% endif %}">Usuarios</a>
+    {% endif %}
+  </nav>
+  <div class="usuario">
+    <span>{{ user.nombre }}{% if user.area %} · {{ user.area.nombre }}{% endif %}</span>
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="boton-barra">Salir</button>
+    </form>
+  </div>
+</header>
+{% endif %}

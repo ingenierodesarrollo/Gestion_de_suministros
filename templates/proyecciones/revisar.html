@@ -3,7 +3,6 @@
 {% block titulo %}Revisar proyección · Gestión de suministros{% endblock %}
 
 {% block contenido %}
-  {% include "configuracion/menu_admin.html" %}
   <div class="tarjeta">
     <h1>Revisar · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }} ({{ proyeccion.get_estado_display }})</h1>
     {% for m in messages %}

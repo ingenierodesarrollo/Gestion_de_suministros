@@ -3,7 +3,6 @@
 {% block titulo %}Productos sugeridos · Gestión de suministros{% endblock %}
 
 {% block contenido %}
-  {% include "configuracion/menu_admin.html" %}
   <div class="tarjeta">
     <h1>Productos sugeridos</h1>
     {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}

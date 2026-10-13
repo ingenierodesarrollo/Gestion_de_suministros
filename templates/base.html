@@ -9,8 +9,11 @@
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
 </head>
 
-<body class="{% block clase_body %}pagina{% endblock %}">
-    {% block contenido %}{% endblock %}
+<body>
+    {% include "barra.html" %}
+    <main class="{% block clase_body %}pagina{% endblock %}">
+        {% block contenido %}{% endblock %}
+    </main>
     {% block scripts %}{% endblock %}
 </body>
 

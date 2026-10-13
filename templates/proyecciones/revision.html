@@ -3,7 +3,6 @@
 {% block titulo %}Revisión de proyecciones · Gestión de suministros{% endblock %}
 
 {% block contenido %}
-  {% include "configuracion/menu_admin.html" %}
   <div class="tarjeta">
     <h1>Revisión de proyecciones</h1>
     {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}

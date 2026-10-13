@@ -3,7 +3,6 @@
 {% block titulo %}Usuarios · Gestión de suministros{% endblock %}
 
 {% block contenido %}
-  {% include "configuracion/menu_admin.html" %}
   <div class="tarjeta">
     <h1>Usuarios</h1>
     {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}

@@ -7,16 +7,6 @@
   <div class="tarjeta">
     <h1>Gestión de suministros</h1>
     <p>Hola, {{ user.nombre }}.<br>Tu rol es: {{ user.get_rol_display }}.</p>
-
-    {% if user.es_coordinador %}
-      <p><a href="{% url 'proyecciones:mi_proyeccion' %}">Mi proyección</a></p>
-    {% endif %}
-    {% if user.es_administrador or user.es_desarrollador %}
-      <p><a href="{% url 'configuracion:panel' %}">Administración</a></p>
-    {% endif %}
-    <form method="post" action="{% url 'logout' %}">
-      {% csrf_token %}
-      <button type="submit" class="salir">Cerrar sesión</button>
-    </form>
+    <p>Usa el menú azul de arriba para moverte por el sistema.</p>
   </div>
 {% endblock %}

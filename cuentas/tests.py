@@ -38,12 +38,12 @@ class CuentasTest(TestCase):
 
     def test_coordinador_no_ve_administracion(self):
         self.client.force_login(self.coord)
-        self.assertNotContains(self.client.get(reverse('inicio')), 'Administración')
+        self.assertNotContains(self.client.get(reverse('inicio')), 'Bitácora')
 
     def test_administrador_y_desarrollador_ven_administracion(self):
         for usuario in (self.admin, self.dev):
             self.client.force_login(usuario)
-            self.assertContains(self.client.get(reverse('inicio')), 'Administración')
+            self.assertContains(self.client.get(reverse('inicio')), 'Bitácora')
 
     def test_coordinador_no_entra_a_revision(self):
         self.client.force_login(self.coord)
