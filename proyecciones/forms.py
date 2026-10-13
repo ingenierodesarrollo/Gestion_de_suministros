@@ -2,7 +2,7 @@ from django import forms
 from django.forms import modelformset_factory
 from datetime import date
 
-from .models import Linea
+from .models import EstadoPeriodo, EstadoProyeccion ,Linea, Periodo
 
 
 class LineaForm(forms.ModelForm):
@@ -24,6 +24,12 @@ class AbrirPeriodoForm(forms.Form):
         label='Fecha límite de envío',
         widget=forms.DateInput(attrs={'type': 'date'}),
     )
+    
+    def clean_anio(self):
+        anio = self.cleaned_data['anio']
+        if Periodo.objects.filter(anio=anio, estado=EstadoPeriodo.CERRADO).exists():
+            raise forms.ValidationError('Ese periodo esta cerrado. Reábrelo primero en Revisión')
+        return anio
 
     def clean_fecha_limite(self):
         fecha = self.cleaned_data['fecha_limite']
@@ -43,4 +49,10 @@ class CorreccionLineaForm(forms.ModelForm):
         widgets = {
             'producto': forms.TextInput(attrs={'list': 'productos-sugeridos', 'autocomplete': 'off'})
         }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+            # En una proyeccion aprobada el autorizado ya existe: no se puede dejar vacio.
+        if self.instance.proyeccion.estado == EstadoProyeccion.APROBADA:
+            self.fields ['cantidad_autorizada'].required = True
        

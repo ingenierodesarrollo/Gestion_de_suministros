@@ -72,6 +72,10 @@
         <p>Agrega al menos una línea para poder enviar.</p>
       {% endif %}
     {% endif %}
-    <p><a href="{% url 'proyecciones:mi_proyeccion' %}">Volver a Mi proyección</a></p>
+    {% if user.es_coordinador %}
+      <p><a href="{% url 'proyecciones:mi_proyeccion' %}">Volver a Mi proyección</a></p>
+    {% else %}
+      <p><a href="{% url 'proyecciones:revision' %}">Volver a Revisión</a></p>
+    {% endif %}
   </div>
 {% endblock %}

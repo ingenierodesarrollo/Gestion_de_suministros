@@ -22,7 +22,8 @@
         estimado: <strong id="costo-estimado">0,00</strong></p>
       <button type="submit">Guardar línea</button>
     </form>
-    <p><a href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a></p>
+    <p><a href="{% if volver %}{{ volver }}{% else %}{% url 'proyecciones:detalle'
+    proyeccion.pk %}{% endif %}">Cancelar</a></p>
   </div>
 {% endblock %}
 

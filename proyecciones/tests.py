@@ -295,3 +295,45 @@ class BitacoraTest(BaseProyeccionTest):
         self.client.force_login(self.coord_urg)
         respuesta = self.client.get(reverse('proyecciones:bitacora'))
         self.assertEqual(respuesta.status_code, 403)
+        
+class ObservacionesPequenasTest(BaseProyeccionTest):
+
+    def _datos_linea(self, **cambios):
+        datos = {'producto': 'Guantes', 'dependencia': '', 'serie': '', 'unidad': self.unidad.pk,
+                 'precio_unitario_est': '1500', 'cantidad_autorizada': '', 'motivo': 'Prueba'}
+        datos.update({mes: 0 for mes in Linea.MESES})
+        datos.update(cambios)
+        return datos
+
+    def test_ajustar_no_deja_el_autorizado_vacio(self):
+        linea = self.crear_linea(self.proy_urg, cantidad_autorizada=5)
+        self.proy_urg.estado = EstadoProyeccion.APROBADA
+        self.proy_urg.save()
+        self.client.force_login(self.admin)
+        respuesta = self.client.post(reverse('proyecciones:corregir_linea', args=[linea.pk]), self._datos_linea())
+        self.assertEqual(respuesta.status_code, 200)  # vuelve al formulario con el error
+        linea.refresh_from_db()
+        self.assertEqual(linea.cantidad_autorizada, 5)
+
+    def test_no_se_abre_un_periodo_cerrado(self):
+        self.periodo.estado = EstadoPeriodo.CERRADO
+        self.periodo.save()
+        self.client.force_login(self.admin)
+        respuesta = self.client.post(reverse('proyecciones:abrir_periodo'),
+                                     {'anio': 2027, 'fecha_limite': date.today() + timedelta(days=30)})
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(ProyeccionArea.objects.filter(periodo=self.periodo).count(), 1)  # no se agregó Laboratorio
+
+    def test_cancelar_del_administrador_vuelve_a_revision(self):
+        linea = self.crear_linea(self.proy_urg)
+        self.proy_urg.estado = EstadoProyeccion.ENVIADA
+        self.proy_urg.save()
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(reverse('proyecciones:corregir_linea', args=[linea.pk]))
+        self.assertContains(respuesta, reverse('proyecciones:revisar', args=[self.proy_urg.pk]))
+
+    def test_detalle_del_administrador_vuelve_a_revision(self):
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(reverse('proyecciones:detalle', args=[self.proy_urg.pk]))
+        self.assertNotContains(respuesta, 'Volver a Mi proyección')
+        self.assertContains(respuesta, reverse('proyecciones:revision'))

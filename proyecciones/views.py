@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.utils import timezone
 from datetime import date
+from django.urls import reverse
 
 from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo, AccionBitacora, Bitacora
 from .forms import AutorizadoFormSet ,AbrirPeriodoForm, CorreccionLineaForm,LineaForm
@@ -196,6 +197,7 @@ def corregir_linea(request, pk):
     titulo = 'Ajustar línea' if proyeccion.estado == EstadoProyeccion.APROBADA else 'Corregir línea'
     return render(request, 'proyecciones/linea_form.html', {
         'form': form, 'proyeccion': proyeccion, 'titulo': titulo, 'sugeridos': _nombres_sugeridos(),
+        'volver': reverse('proyecciones:revisar', args=[proyeccion.pk]),
     })
     
 @rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
