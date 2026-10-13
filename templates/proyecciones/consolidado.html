@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block titulo %}Consolidado · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Consolidado de proyecciones</h1>
+    {% if not periodo %}
+      <p>Todavía no hay periodos abiertos.</p>
+    {% else %}
+      <form method="get">
+        <label for="anio">Año:</label>
+        <select name="anio" id="anio" onchange="this.form.submit()">
+          {% for per in periodos %}<option value="{{ per.anio }}" {% if per.pk == periodo.pk %}selected{% endif %}>{{ per.anio }}</option>{% endfor %}
+        </select>
+      </form>
+      <p class="resumen separado">Costo proyectado de todas las áreas: <strong>{{ costo_general|floatformat:"2g" }}</strong></p>
+      <p><a href="{% url 'proyecciones:descargar_consolidado' periodo.anio %}">Descargar Excel del {{ periodo.anio }}</a></p>
+      {% if pendientes %}<p class="aviso error">Sin enviar todavía (no se incluyen): {% for p in pendientes %}{{ p.area.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+
+      <h2>Por área</h2>
+      {% for a in areas %}
+        <h3>{{ a.proyeccion.area.nombre }} ({{ a.proyeccion.get_estado_display }})</h3>
+        <div class="desplazable">
+          <table class="tabla tabla-chica">
+            <thead><tr><th>Producto</th><th>Dependencia</th><th>Serie</th><th>Unidad</th>{% for m in meses %}<th class="num">{{ m }}</th>{% endfor %}<th class="num">Total</th><th class="num">Autorizado</th><th class="num">Costo</th></tr></thead>
+            <tbody>
+              {% for f in a.filas %}
+              <tr>
+                <td>{{ f.linea.producto }}</td><td>{{ f.linea.dependencia|default:"—" }}</td><td>{{ f.linea.serie|default:"—" }}</td><td>{{ f.linea.unidad }}</td>
+                {% for v in f.meses %}<td class="num">{{ v }}</td>{% endfor %}
+                <td class="num">{{ f.linea.total_anual }}</td><td class="num">{{ f.linea.cantidad_autorizada|default_if_none:"—" }}</td><td class="num">{{ f.linea.costo|floatformat:"2g" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot><tr><td colspan="18">Costo total del área</td><td class="num">{{ a.costo_total|floatformat:"2g" }}</td></tr></tfoot>
+          </table>
+        </div>
+      {% empty %}
+        <p>Ninguna área ha enviado su proyección de este año.</p>
+      {% endfor %}
+
+      <h2>Por producto (suma de todas las áreas)</h2>
+      <div class="desplazable">
+        <table class="tabla tabla-chica">
+          <thead><tr><th>Producto</th><th>Unidad</th><th>Áreas</th>{% for m in meses %}<th class="num">{{ m }}</th>{% endfor %}<th class="num">Total</th><th class="num">Autorizado</th><th class="num">Costo</th></tr></thead>
+          <tbody>
+            {% for g in productos %}
+            <tr>
+              <td>{{ g.producto }}</td><td>{{ g.unidad }}</td><td>{{ g.areas }}</td>
+              {% for v in g.meses %}<td class="num">{{ v }}</td>{% endfor %}
+              <td class="num">{{ g.total }}</td><td class="num">{{ g.autorizado|default_if_none:"—" }}</td><td class="num">{{ g.costo|floatformat:"2g" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="18">Sin datos.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

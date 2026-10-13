@@ -94,3 +94,6 @@ form.en-linea { display: inline; }
 .boton-barra { width: auto; padding: 0.3rem 0.8rem; font-size: 0.85rem; background: transparent; border: 1px solid #fff; }
 .boton-barra:hover { background: #0f1a3d; }
 
+.desplazable {overflow-x: auto; margin-bottom: 1rem; }
+.tabla-chica th, .tabla-chica td { padding: 0.3rem 0.4rem; font-size: 0.85rem; white-space: nowrap; }
+

@@ -6,6 +6,9 @@ from django.contrib import messages
 from django.utils import timezone
 from datetime import date
 from django.urls import reverse
+from .consolidado import MESES_CORTOS, consolidado_por_area, consolidado_por_producto
+from django.http import HttpResponse
+from .exportar import construir_excel
 
 from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo, AccionBitacora, Bitacora
 from .forms import AutorizadoFormSet ,AbrirPeriodoForm, CorreccionLineaForm,LineaForm
@@ -216,3 +219,32 @@ def bitacora(request):
         fila.objeto = nombre_registro(fila.tabla, fila.registro_id)
         fila.campo_legible = nombre_campo(fila.campo) if fila.campo else ''
     return render(request, 'proyecciones/bitacora.html', {'filas': filas})
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def consolidado_vista(request):
+    """Consolidado de un año: cada área por separado y la suma por producto."""
+    periodos = Periodo.objects.all()
+    anio = request.GET.get('anio', '')
+    periodo = get_object_or_404(Periodo, anio=anio) if anio.isdigit() else periodos.first()
+    contexto = {'periodos': periodos, 'periodo': periodo, 'meses': MESES_CORTOS}
+    if periodo:
+        areas = consolidado_por_area(periodo)
+        contexto.update({
+            'areas': areas,
+            'productos': consolidado_por_producto(periodo),
+            'costo_general': sum(a['costo_total'] for a in areas),
+            'pendientes': periodo.proyecciones.filter(estado=EstadoProyeccion.BORRADOR).select_related('area'),
+        })
+    return render(request, 'proyecciones/consolidado.html', contexto)
+
+@rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def descargar_consolidado(request, anio):
+    """Descarga el consolidado del año en Excel."""
+    periodo = get_object_or_404(Periodo, anio=anio)
+    respuesta = HttpResponse(
+        construir_excel(periodo),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    respuesta['Content-Disposition'] = f'attachment; filename="Consolidado_proyeccion_{periodo.anio}.xlsx"'
+    return respuesta
+

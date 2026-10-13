@@ -18,4 +18,6 @@ urlpatterns = [
     path('linea/<int:pk>/corregir/', views.corregir_linea, name='corregir_linea'),
     path('periodo/<int:pk>/alternar/', views.alternar_periodo_vista, name='alternar_periodo'),
     path('bitacora/', views.bitacora, name='bitacora'),
+    path('consolidado/', views.consolidado_vista, name='consolidado'),
+    path('consolidado/<int:anio>/excel/', views.descargar_consolidado, name='descargar_consolidado'),
 ]

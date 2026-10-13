@@ -7,6 +7,7 @@
     {% endif %}
     {% if user.es_administrador or user.es_desarrollador %}
       <a href="{% url 'proyecciones:revision' %}" class="{% if request.resolver_match.view_name == 'proyecciones:revision' %}activo{% endif %}">Revisión</a>
+      <a href="{% url 'proyecciones:consolidado' %}" class="{% if request.resolver_match.view_name == 'proyecciones:consolidado' %}activo{% endif %}">Consolidado</a>
       <a href="{% url 'proyecciones:abrir_periodo' %}" class="{% if request.resolver_match.view_name == 'proyecciones:abrir_periodo' %}activo{% endif %}">Abrir periodo</a>
       <a href="{% url 'proyecciones:bitacora' %}" class="{% if request.resolver_match.view_name == 'proyecciones:bitacora' %}activo{% endif %}">Bitácora</a>
       <a href="{% url 'configuracion:areas' %}" class="{% if request.resolver_match.view_name == 'configuracion:areas' %}activo{% endif %}">Áreas</a>
