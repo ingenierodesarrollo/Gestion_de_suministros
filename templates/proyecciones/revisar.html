@@ -4,7 +4,7 @@
 
 {% block contenido %}
   <div class="tarjeta">
-    <h1>Revisar · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }} ({{ proyeccion.get_estado_display }})</h1>
+    <h1>Revisar · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }} <span class="etiqueta estado-{{ proyeccion.estado }}">{{ proyeccion.get_estado_display }}</span></h1>
     {% for m in messages %}
       <p class="aviso {{ m.tags }}">{{ m }}</p>
     {% endfor %}

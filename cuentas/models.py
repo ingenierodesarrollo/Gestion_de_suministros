@@ -44,6 +44,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     )
     activo = models.BooleanField('activo', default=True)
     # La contraseña cifrada vive en el campo "password" heredado de AbstractBaseUser.
+    
+    debe_cambiar_clave = models.BooleanField('debe cambiar la clave', default=False)
 
     objects = UsuarioManager()
 

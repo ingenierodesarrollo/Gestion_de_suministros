@@ -30,10 +30,11 @@ def detalle_proyeccion(request, pk):
         raise PermissionDenied
     lineas = proyeccion.lineas.select_related('unidad')
     costo_total = sum(linea.costo for linea in lineas)
+    total_unidades = sum(linea.total_anual for linea in lineas)
     puede_editar = (proyeccion.estado == EstadoProyeccion.BORRADOR
                     and proyeccion.periodo.estado == EstadoPeriodo.ABIERTO)
     return render(request, 'proyecciones/detalle.html', {
-        'proyeccion': proyeccion, 'lineas': lineas, 'costo_total': costo_total, 'puede_editar': puede_editar,
+        'proyeccion': proyeccion, 'lineas': lineas, 'costo_total': costo_total, 'puede_editar': puede_editar, 'total_unidades': total_unidades,
     })
     
 def _obtener_proyeccion(request, pk):

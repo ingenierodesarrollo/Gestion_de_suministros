@@ -7,5 +7,5 @@ urlpatterns = [
     path("", views.inicio, name="inicio"),
     path("ingresar/", auth_views.LoginView.as_view(template_name="cuentas/login.html"), name="login"),
     path("salir/", auth_views.LogoutView.as_view(), name="logout"),
-    path("zona-admin/", views.zona_admin, name = "zona_admin"),
+    path("cambiar-clave/", views.CambiarClaveView.as_view(), name="cambiar_clave"),
 ]

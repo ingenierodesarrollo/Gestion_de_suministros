@@ -3,62 +3,70 @@
 {% block titulo %}Revisión de proyecciones · Gestión de suministros{% endblock %}
 
 {% block contenido %}
-  <div class="tarjeta">
-    <h1>Revisión de proyecciones</h1>
-    {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
-    <p><a href="{% url 'proyecciones:abrir_periodo' %}">Abrir periodo</a></p>
-        <p><a href="{% url 'proyecciones:bitacora' %}">Ver bitácora</a></p>
-    <h2>Periodos</h2>
-    <table class="tabla">
-      <thead><tr><th>Año</th><th>Fecha límite</th><th>Estado</th><th></th></tr></thead>
-      <tbody>
-        {% for per in periodos %}
-        <tr>
-          <td>{{ per.anio }}</td>
-          <td>{% if per.estado == 'abierto' and per.fecha_limite < hoy %}<span class="error">{{ per.fecha_limite|date:"d/m/Y" }} (vencida)</span>{% else %}{{ per.fecha_limite|date:"d/m/Y" }}{% endif %}</td>
-          <td>{{ per.get_estado_display }}</td>
-          <td>
-            <form method="post" action="{% url 'proyecciones:alternar_periodo' per.pk %}" class="en-linea" onsubmit="return confirm('¿Cambiar el estado de este periodo?');">
-              {% csrf_token %}
-              <button type="submit" class="boton-chico">{% if per.estado == 'abierto' %}Cerrar{% else %}Reabrir{% endif %}</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <table class="tabla">
-      <thead>
-        <tr>
-          <th>Año</th>
-          <th>Área</th>
-          <th>Estado</th>
-          <th>Enviada</th>
-          <th class="num">Líneas</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in proyecciones %}
-        <tr>
-          <td>{{ p.periodo }}</td>
-          <td>{{ p.area.nombre }}</td>
-          <td>{{ p.get_estado_display }}</td>
-          <td>{{ p.fecha_envio|date:"d/m/Y"|default:"—" }}</td>
-          <td class="num">{{ p.lineas.count }}</td>
-          <td>
-            {% if p.estado != 'borrador' %}
-              <a href="{% url 'proyecciones:revisar' p.pk %}">Revisar</a>
-            {% endif %}
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="6">No hay proyecciones.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <p><a href="{% url 'inicio' %}">Volver al inicio</a></p>
-  </div>
+<div class="tarjeta">
+  <h1>Revisión de proyecciones</h1>
+  {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
+  <p><a href="{% url 'proyecciones:abrir_periodo' %}">Abrir periodo</a></p>
+  <p><a href="{% url 'proyecciones:bitacora' %}">Ver bitácora</a></p>
+  <h2>Periodos</h2>
+  <table class="tabla">
+    <thead>
+      <tr>
+        <th>Año</th>
+        <th>Fecha límite</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for per in periodos %}
+      <tr>
+        <td>{{ per.anio }}</td>
+        <td>{% if per.estado == 'abierto' and per.fecha_limite < hoy %}<span class="error">{{ per.fecha_limite|date:"d/m/Y" }} (vencida)</span>{% else %}{{ per.fecha_limite|date:"d/m/Y" }}{% endif %}</td>
+        <td><span class="etiqueta estado-{{ per.estado }}">{{ per.get_estado_display }}</span></td>
+        <td>
+          <form method="post" action="{% url 'proyecciones:alternar_periodo' per.pk %}" class="en-linea"
+            onsubmit="return confirm('¿Cambiar el estado de este periodo?');">
+            {% csrf_token %}
+            <button type="submit" class="boton-chico">{% if per.estado == 'abierto' %}Cerrar{% else %}Reabrir{% endif %}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table class="tabla">
+    <thead>
+      <tr>
+        <th>Año</th>
+        <th>Área</th>
+        <th>Estado</th>
+        <th>Enviada</th>
+        <th class="num">Líneas</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in proyecciones %}
+      <tr>
+        <td>{{ p.periodo }}</td>
+        <td>{{ p.area.nombre }}</td>
+        <td><span class="etiqueta estado-{{ p.estado }}">{{ p.get_estado_display }}</span></td>
+        <td>{{ p.fecha_envio|date:"d/m/Y"|default:"—" }}</td>
+        <td class="num">{{ p.lineas.count }}</td>
+        <td>
+          {% if p.estado != 'borrador' %}
+          <a href="{% url 'proyecciones:revisar' p.pk %}">Revisar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6">No hay proyecciones.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p><a href="{% url 'inicio' %}">Volver al inicio</a></p>
+</div>
 {% endblock %}

@@ -8,8 +8,10 @@ Usa .env.example como plantilla.
 
 import os
 from pathlib import Path
+import sys
 
 from dotenv import load_dotenv
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -34,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'axes',
     # Apps propias
     'areas',
     'cuentas',
@@ -47,8 +50,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'cuentas.middleware.ForzarCambioClaveMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -100,6 +105,21 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',  # debe ir primero: es quien bloquea
+    'django.contrib.auth.backends.ModelBackend',
+]
+AXES_USERNAME_FORM_FIELD = 'username'         # el formulario de ingreso envía el correo con este nombre
+AXES_FAILURE_LIMIT = 5                        # intentos fallidos permitidos
+AXES_COOLOFF_TIME = timedelta(minutes=15)     # cuánto dura el bloqueo
+AXES_LOCKOUT_PARAMETERS = ['username']        # se bloquea al correo, no a la computadora
+AXES_RESET_ON_SUCCESS = True                  # un ingreso correcto reinicia la cuenta de fallos
+AXES_LOCKOUT_TEMPLATE = 'cuentas/bloqueado.html'
+
+# Cierre de sesión por inactividad: 30 minutos sin usar el sistema
+SESSION_COOKIE_AGE = 30 * 60
+SESSION_SAVE_EVERY_REQUEST = True
+
 
 # Idioma y zona horaria
 
@@ -116,3 +136,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if 'test' in sys.argv:
+    # Solo al correr las pruebas: un cifrado rápido. En el sistema real se sigue usando el seguro.
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+

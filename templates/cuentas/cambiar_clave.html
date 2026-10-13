@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cambiar clave · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Cambiar clave</h1>
+    {% if user.debe_cambiar_clave %}<p class="aviso info">Por seguridad debes cambiar la clave que te dieron antes de continuar.</p>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Guardar clave nueva</button>
+    </form>
+  </div>
+{% endblock %}

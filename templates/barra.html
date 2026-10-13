@@ -18,6 +18,7 @@
   </nav>
   <div class="usuario">
     <span>{{ user.nombre }}{% if user.area %} · {{ user.area.nombre }}{% endif %}</span>
+    <a href="{% url 'cambiar_clave' %}">Mi clave</a>
     <form method="post" action="{% url 'logout' %}">
       {% csrf_token %}
       <button type="submit" class="boton-barra">Salir</button>

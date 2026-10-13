@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from areas.models import Area
@@ -57,6 +57,8 @@ class ConfiguracionTest(TestCase):
         self.assertFalse(producto.activo)
         
 CLAVE = 'Clave-Segura-2027'
+
+@override_settings(AXES_ENABLED=False)
 
 
 class UsuariosTest(TestCase):

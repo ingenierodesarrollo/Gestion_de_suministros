@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block titulo %}Acceso bloqueado · Gestión de suministros{% endblock %}
+{% block clase_body %}centrado{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  <h1>Acceso bloqueado</h1>
+  <p class="aviso error">Por seguridad, el ingreso se bloqueó temporalmente después de varios intentos fallidos.</p>
+  <p>Espera unos minutos e intenta de nuevo. Si necesitas entrar ya, pídele a un desarrollador que te desbloquee.</p>
+  <p><a href="{% url 'login' %}">Volver a ingresar</a></p>
+</div>
+{% endblock %}

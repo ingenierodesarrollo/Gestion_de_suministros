@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from decimal import Decimal
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 
 
 class EstadoPeriodo(models.TextChoices):
@@ -32,7 +33,11 @@ class Periodo(models.Model):
 
     def __str__(self):
         return str(self.anio)
-
+    
+    @property
+    def dias_restantes(self):
+        """Días que faltan para la fecha límite (negativo si ya pasó)."""
+        return (self.fecha_limite - timezone.localdate()).days
 
 class UnidadMedida(models.Model):
     """Unidad en que se pide un producto: Unidad, Caja x 100, Litro..."""

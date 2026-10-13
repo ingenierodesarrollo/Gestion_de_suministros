@@ -1,0 +1,9 @@
+{% if periodo.estado == 'abierto' %}
+<span class="limite">{{ periodo.fecha_limite|date:"d/m/Y" }} ·
+{% with dias=periodo.dias_restantes %}
+{% if dias < 0 %}vencida{% elif dias == 0 %}vence hoy{% elif dias == 1 %}falta 1 día{% else %}faltan {{ dias }} días{% endif %}
+{% endwith %}
+</span>
+{% else %}
+{{ periodo.fecha_limite|date:"d/m/Y" }} (periodo cerrado)
+{% endif %}

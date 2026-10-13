@@ -1,12 +1,14 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
+
 from areas.models import Area
 from cuentas.models import Rol, Usuario
 from cuentas.permisos import rol_requerido
 
 from proyecciones.models import ProductoSugerido, UnidadMedida
 from .forms import AreaForm, ProductoForm, UnidadForm, UsuarioCrearForm, UsuarioEditarForm
+
 
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import SetPasswordForm
@@ -97,7 +99,9 @@ def usuarios_lista(request):
 def usuario_crear(request):
     form = UsuarioCrearForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        form.save()
+        usuario = form.save(commit=False)
+        usuario.debe_cambiar_clave = True
+        usuario.save()
         messages.success(request, 'Usuario creado.')
         return redirect('configuracion:usuarios')
     return render(request, 'configuracion/form_simple.html', {
@@ -129,7 +133,12 @@ def usuario_clave(request, pk):
         form.save()
         if usuario.pk == request.user.pk:
             update_session_auth_hash(request, usuario)  # para no cerrarle la sesión a quien se cambia su propia clave
+        else:
+            usuario.debe_cambiar_clave = True  # la clave la puso otra persona: debe cambiarla al ingresar
+            usuario.save(update_fields=['debe_cambiar_clave'])
         messages.success(request, f'Clave nueva guardada para {usuario.nombre}.')
         return redirect('configuracion:usuarios')
     return render(request, 'configuracion/form_simple.html', {
         'form': form, 'titulo': f'Clave nueva para {usuario.nombre}', 'volver': 'configuracion:usuarios'})
+    
+    
