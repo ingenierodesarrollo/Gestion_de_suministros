@@ -6,7 +6,7 @@
   <div class="tarjeta">
     <h1>Áreas</h1>
     {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
-    <p><a href="{% url 'configuracion:area_nueva' %}">Nueva área</a></p>
+    <p><a class="boton-tabla" href="{% url 'configuracion:area_nueva' %}">Nueva área</a></p>
     <table class="tabla">
       <thead><tr><th>Código</th><th>Nombre</th><th>Estado</th><th></th></tr></thead>
       <tbody>
@@ -16,10 +16,10 @@
           <td>{{ a.nombre }}</td>
           <td>{% if a.activa %}Activa{% else %}Desactivada{% endif %}</td>
           <td>
-            <a href="{% url 'configuracion:area_editar' a.pk %}">Editar</a>
+            <a class="boton-tabla" href="{% url 'configuracion:area_editar' a.pk %}">Editar</a>
             <form method="post" action="{% url 'configuracion:area_alternar' a.pk %}" class="en-linea">
               {% csrf_token %}
-              <button type="submit" class="boton-chico">{% if a.activa %}Desactivar{% else %}Activar{% endif %}</button>
+              <button type="submit" class="boton-tabla">{% if a.activa %}Desactivar{% else %}Activar{% endif %}</button>
             </form>
           </td>
         </tr>
@@ -28,6 +28,6 @@
         {% endfor %}
       </tbody>
     </table>
-    <p><a href="{% url 'inicio' %}">Volver al inicio</a></p>
+    <p><a class="boton-tabla" href="{% url 'inicio' %}">Volver al inicio</a></p>
   </div>
 {% endblock %}

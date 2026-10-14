@@ -16,7 +16,7 @@
   </form>
   <p class="resumen separado">Costo proyectado de todas las áreas: <strong>{{ costo_general|floatformat:"2g" }}</strong>
   </p>
-  <p><a href="{% url 'proyecciones:descargar_consolidado' periodo.anio %}">Descargar Excel del {{ periodo.anio }}</a>
+  <p><a class="boton-tabla" href="{% url 'proyecciones:descargar_consolidado' periodo.anio %}">Descargar Excel del {{ periodo.anio }}</a>
   </p>
    {% if pendientes %}<p class="aviso error">Sin enviar todavía (no se incluyen): {% for p in pendientes %}{{ p.area.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
 

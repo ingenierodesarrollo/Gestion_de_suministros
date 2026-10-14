@@ -1,6 +1,7 @@
 {% if user.is_authenticated %}
 <header class="barra">
-  <a class="marca" href="{% url 'inicio' %}">Suministros</a>
+  <a class="marca" href="{% url 'inicio' %}">Sistema de Gestión de Suministros</a>
+  {% if request.resolver_match.view_name != 'inicio' %}
   <nav>
     {% if user.es_coordinador %}
       <a href="{% url 'proyecciones:mi_proyeccion' %}">Mi proyección</a>
@@ -16,6 +17,7 @@
       <a href="{% url 'configuracion:usuarios' %}" class="{% if request.resolver_match.view_name == 'configuracion:usuarios' %}activo{% endif %}">Usuarios</a>
     {% endif %}
   </nav>
+  {% endif %}
   <div class="usuario">
     <span>{{ user.nombre }}{% if user.area %} · {{ user.area.nombre }}{% endif %}</span>
     <a href="{% url 'cambiar_clave' %}">Mi clave</a>

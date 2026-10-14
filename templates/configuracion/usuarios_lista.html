@@ -6,7 +6,7 @@
   <div class="tarjeta">
     <h1>Usuarios</h1>
     {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
-    <p><a href="{% url 'configuracion:usuario_nuevo' %}">Nuevo usuario</a></p>
+    <p><a class="boton-tabla" href="{% url 'configuracion:usuario_nuevo' %}">Nuevo usuario</a></p>
     <table class="tabla">
       <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Área</th><th>Estado</th><th></th></tr></thead>
       <tbody>
@@ -18,8 +18,10 @@
           <td>{{ u.area.nombre|default:"—" }}</td>
           <td>{% if u.activo %}Activo{% else %}Desactivado{% endif %}</td>
           <td>
-            <a href="{% url 'configuracion:usuario_editar' u.pk %}">Editar</a>
-            <a href="{% url 'configuracion:usuario_clave' u.pk %}">Cambiar clave</a>
+            <div class="acciones-tabla">
+            <a class="boton-tabla" href="{% url 'configuracion:usuario_editar' u.pk %}">Editar</a>
+            <a class="boton-tabla" href="{% url 'configuracion:usuario_clave' u.pk %}">Cambiar clave</a>
+            </div>
           </td>
         </tr>
         {% empty %}
@@ -27,6 +29,6 @@
         {% endfor %}
       </tbody>
     </table>
-    <p><a href="{% url 'inicio' %}">Volver al inicio</a></p>
+    <p><a class="boton-tabla" href="{% url 'inicio' %}">Volver al inicio</a></p>
   </div>
 {% endblock %}

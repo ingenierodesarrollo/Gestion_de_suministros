@@ -4,9 +4,28 @@
 {% block clase_body %}centrado{% endblock %}
 
 {% block contenido %}
-  <div class="tarjeta">
-    <h1>Gestión de suministros</h1>
-    <p>Hola, {{ user.nombre }}.<br>Tu rol es: {{ user.get_rol_display }}.</p>
-    <p>Usa el menú azul de arriba para moverte por el sistema.</p>
+  <div class="tarjeta bienvenida">
+    <div class="icono-usuario">
+      <svg viewBox="0 0 24 24" width="56" height="56" fill="currentColor" aria-hidden="true">
+        <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-9 2.2-9 5v3h18v-3c0-2.8-4.6-5-9-5z"/>
+      </svg>
+    </div>
+    <h1>Hola, {{ user.nombre }}</h1>
+    <p class="rol">Rol: {{ user.get_rol_display }}</p>
+    <div class="botones-inicio">
+      {% if user.es_coordinador %}
+        <a class="boton" href="{% url 'proyecciones:mi_proyeccion' %}">Mi proyección</a>
+      {% endif %}
+      {% if user.es_administrador or user.es_desarrollador %}
+        <a class="boton" href="{% url 'proyecciones:revision' %}">Revisión</a>
+        <a class="boton" href="{% url 'proyecciones:consolidado' %}">Consolidado</a>
+        <a class="boton" href="{% url 'proyecciones:abrir_periodo' %}">Abrir periodo</a>
+        <a class="boton" href="{% url 'proyecciones:bitacora' %}">Bitácora</a>
+        <a class="boton" href="{% url 'configuracion:areas' %}">Áreas</a>
+        <a class="boton" href="{% url 'configuracion:unidades' %}">Unidades</a>
+        <a class="boton" href="{% url 'configuracion:productos' %}">Productos sugeridos</a>
+        <a class="boton" href="{% url 'configuracion:usuarios' %}">Usuarios</a>
+      {% endif %}
+    </div>
   </div>
 {% endblock %}
