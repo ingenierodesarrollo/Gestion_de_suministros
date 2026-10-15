@@ -3,22 +3,38 @@
 {% block titulo %}Subir Excel · Gestión de suministros{% endblock %}
 
 {% block contenido %}
-  <div class="tarjeta">
-    <h1>Subir Excel · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }}</h1>
-    <p>Use la <a class="boton-tabla" href="{% url 'proyecciones:plantilla_excel' %}">plantilla Excel</a>. Cada fila será una línea de la proyección.</p>
-    <ul>
-      <li>Solo es obligatoria la columna Equipo / Producto / Servicio.</li>
-      <li>Los meses vacíos quedan en 0.</li>
-      <li>El precio estimado es opcional: si falta, la línea queda con "Falta precio" y debe completarse antes de enviar.</li>
-      <li>La unidad es opcional: si queda vacía, la línea queda en "Unidad". Si la escribe, debe ser una de la lista.</li>
-      <li>También puede subir el formato FR-GDS-11 de años anteriores tal cual.</li>
-      <li>Nada se guarda hasta que confirme en la vista previa.</li>
-    </ul>
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <label>{{ form.archivo.label }}{{ form.archivo }}{{ form.archivo.errors }}</label>
-      <button type="submit">Revisar archivo</button>
-    </form>
-    <p><a class="boton-tabla" href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a></p>
+<div class="tarjeta formulario ancho">
+  <h1>Subir Excel</h1>
+  <p class="ayuda">{{ proyeccion.area.nombre }} · {{ proyeccion.periodo }}. Cada fila del archivo será una línea de la proyección.</p>
+
+  <div class="paso-form">
+    <h2>1. Descargue la plantilla</h2>
+    <a class="boton-secundario" href="{% url 'proyecciones:plantilla_excel' %}">Descargar plantilla Excel</a>
   </div>
+
+  <ul class="nota">
+    <li>Solo es obligatoria la columna <strong>Equipo / Producto / Servicio</strong>.</li>
+    <li>Los meses vacíos quedan en 0.</li>
+    <li>El precio es opcional: si falta, la línea queda con "Falta precio" y debe completarse antes de enviar.</li>
+    <li>La unidad es opcional: si queda vacía, se usa "Unidad". Si la escribe, debe ser una de la lista.</li>
+    <li>También sirve el formato FR-GDS-11 de años anteriores tal cual.</li>
+    <li>Nada se guarda hasta que confirme en la vista previa.</li>
+  </ul>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="paso-form">
+      <h2>2. Seleccione el archivo lleno</h2>
+      <label class="zona-archivo" for="{{ form.archivo.id_for_label }}">
+        <span>Archivo Excel (.xlsx)</span>
+        {{ form.archivo }}
+      </label>
+      {% for e in form.archivo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </div>
+    <div class="botones-form">
+      <button type="submit">Revisar archivo</button>
+      <a class="boton-secundario" href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a>
+    </div>
+  </form>
+</div>
 {% endblock %}
