@@ -22,7 +22,7 @@ body {
 .tarjeta {
   background: #fff;
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 12px;
   width: 340px;
   border-top: 4px solid var(--azul);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -30,12 +30,12 @@ body {
 
 h1 { color: var(--azul); font-size: 1.25rem; margin: 0 0 1.25rem; }
 
-input[type="text"], input[type="email"], input[type="password"] {
+input[type="text"], input[type="email"], input[type="password"], select {
   width: 100%;
   box-sizing: border-box;
   padding: 0.55rem;
   border: 1px solid #c3c8d4;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 button {
@@ -44,7 +44,7 @@ button {
   background: var(--azul);
   color: #fff;
   border: 0;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
   cursor: pointer;
 }
@@ -54,13 +54,14 @@ button.salir { background: #fff; color: var(--rojo); border: 1px solid var(--roj
 .error { color: var(--rojo); font-size: 0.9rem; }
 
 .pagina { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-.pagina .tarjeta { width: auto; }
-.tabla { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-.tabla th { background: var(--azul); color: #fff; text-align: left; padding: 0.5rem; }
-.tabla td { padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
+.pagina .tarjeta { width: auto; }.tabla { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+.tabla th { background: var(--azul); color: #fff; text-align: left; font-weight: 600; font-size: 0.85rem; padding: 0.7rem 0.8rem; }
+.tabla td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #eef0f4; }
+.tabla tbody tr:nth-child(even) td { background: #f9fafb; }
 .tabla tbody tr:hover td { background: var(--azul-claro); }
+.tabla tbody tr:last-child td { border-bottom: 0; }
 .num { text-align: right; }
-.tabla tfoot td { font-weight: bold; color: var(--azul); }
+.tabla tfoot td { font-weight: bold; color: var(--azul); background: var(--fondo); border-top: 1px solid #e5e7eb; }
 
 .rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
 .rejilla label { font-size: 0.85rem; }
@@ -116,35 +117,17 @@ form.en-linea { display: inline; }
 
 /* Pantalla de inicio */
 .bienvenida { text-align: center; }
+.tarjeta.bienvenida { width: 460px; }
 .icono-usuario { width: 88px; height: 88px; margin: 0 auto 1rem; border-radius: 50%; background: var(--azul-claro); color: var(--azul); display: flex; align-items: center; justify-content: center; }
 .bienvenida h1 { margin-bottom: 0.25rem; }
 .bienvenida .rol { font-size: 0.9rem; color: #6b7280; margin: 0 0 1.5rem; }
-.botones-inicio { display: flex; flex-direction: column; gap: 0.6rem; }
-a.boton { display: block; padding: 0.65rem; background: var(--azul); color: #fff; text-decoration: none; border-radius: 4px; }
+.botones-inicio { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+a.boton { display: block; padding: 0.65rem; background: var(--azul); color: #fff; text-decoration: none; border-radius: 6px; }
 a.boton:hover { background: #0f1a3d; }
-.tarjeta.bienvenida { width: 460px; }
-.botones-inicio { display: grid; grid-template-columns: 1fr 1fr; }
 
-.boton-tabla { display: inline-block; width: auto; padding: 0.25rem 0.7rem; font-size: 0.85rem; font-family: inherit; line-height: 1.4; background: var(--azul); color: #fff; text-decoration: none; border: 0; border-radius: 4px; vertical-align: middle; cursor: pointer; }
+/* Botones en tablas y filas de acciones */
+.boton-tabla { display: inline-block; width: auto; padding: 0.25rem 0.7rem; font-size: 0.85rem; font-family: inherit; line-height: 1.4; background: var(--azul); color: #fff; text-decoration: none; border: 0; border-radius: 6px; vertical-align: middle; cursor: pointer; white-space: nowrap; }
 .boton-tabla:hover { background: #0f1a3d; }
-
-.acciones { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-
 .tabla .boton-tabla { min-width: 6.5rem; box-sizing: border-box; text-align: center; }
-
+.acciones { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 .acciones-tabla { display: flex; gap: 0.4rem; align-items: center; }
-
-.boton-tabla { white-space: nowrap; }
-
-/* Tablas */
-.tabla { border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
-.tabla th { font-weight: 600; font-size: 0.85rem; padding: 0.7rem 0.8rem; }
-.tabla td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #eef0f4; }
-.tabla tbody tr:nth-child(even) td { background: #f9fafb; }
-.tabla tbody tr:hover td { background: var(--azul-claro); }
-.tabla tbody tr:last-child td { border-bottom: 0; }
-.tabla tfoot td { background: var(--fondo); border-top: 1px solid #e5e7eb; }
-
-.tarjeta { border-radius: 12px; }
-input[type="text"], input[type="email"], input[type="password"], select { border-radius: 6px; }
-.boton-tabla, a.boton, button { border-radius: 6px; }

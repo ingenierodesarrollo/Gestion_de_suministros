@@ -45,7 +45,7 @@
           <td class="num">{{ l.costo|floatformat:"2g" }}</td>
           <td>
             {% if puede_editar %}
-              <a href="{% url 'proyecciones:editar_linea' l.pk %}">Editar</a>
+              <a class="boton-tabla" href="{% url 'proyecciones:editar_linea' l.pk %}">Editar</a>
               <form method="post" action="{% url 'proyecciones:borrar_linea' l.pk %}" class="en-linea"
                 onsubmit="return confirm('¿Borrar esta línea?');">
                 {% csrf_token %}
@@ -69,7 +69,7 @@
       </tfoot>
     </table>
     {% if puede_editar %}
-      <p><a href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a></p>
+      <p><a class="boton-tabla" href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a></p>
       {% if lineas %}
         <form method="post" action="{% url 'proyecciones:enviar' proyeccion.pk %}"
           onsubmit="return confirm('Después de enviar ya no podrás modificarla. ¿Enviar?');">
@@ -81,7 +81,7 @@
       {% endif %}
     {% endif %}
     {% if user.es_coordinador %}
-      <p><a href="{% url 'proyecciones:mi_proyeccion' %}">Volver a Mi proyección</a></p>
+      <p><a class="boton-tabla" href="{% url 'proyecciones:mi_proyeccion' %}">Volver a Mi proyección</a></p>
     {% else %}
       <p><a href="{% url 'proyecciones:revision' %}">Volver a Revisión</a></p>
     {% endif %}
