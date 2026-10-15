@@ -12,7 +12,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from .exportar import AZUL
-from .models import AccionBitacora, Linea, UnidadMedida
+from .models import AccionBitacora, Bitacora, Linea, UnidadMedida
 from .servicios import registrar
 
 MESES_NOMBRES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto',
@@ -100,9 +100,10 @@ def _texto(valor):
 
 
 def _entero(valor):
-    """Cantidad de un mes. Vacío = 0. Debe ser entero y no negativo."""
+    """Cantidad de un mes. Vacío = None (en una línea nueva cuenta como 0; en una existente no cambia nada).
+    Debe ser entero y no negativo."""
     if _texto(valor) == '':
-        return 0
+        return None
     if isinstance(valor, float) and valor.is_integer():
         valor = int(valor)
     if isinstance(valor, int) and not isinstance(valor, bool):
@@ -152,10 +153,28 @@ def _clave_linea(producto, dependencia, serie, unidad_id):
     return (' '.join(producto.lower().split()), dependencia.strip().lower(), serie.strip().lower(), unidad_id)
 
 
-def claves_existentes(proyeccion):
-    """Claves de las líneas que ya tiene la proyección, para no repetirlas."""
-    return {_clave_linea(*datos)
-            for datos in proyeccion.lineas.values_list('producto', 'dependencia', 'serie', 'unidad_id')}
+def lineas_existentes(proyeccion):
+    """{clave: datos actuales} de las líneas que ya tiene la proyección. Sirve para saber cuáles se actualizan."""
+    campos = ('id', 'producto', 'dependencia', 'serie', 'unidad_id', *Linea.MESES, 'precio_unitario_est')
+    existentes = {}
+    for fila in proyeccion.lineas.values_list(*campos):
+        datos = dict(zip(campos, fila))
+        clave = _clave_linea(datos['producto'], datos['dependencia'], datos['serie'], datos['unidad_id'])
+        existentes[clave] = datos
+    return existentes
+
+
+def _cambios(actual, meses, precio):
+    """Lista de (campo, antes, después) solo con las celdas que el Excel trae con valor y que son distintas."""
+    cambios = []
+    for campo, valor in zip(Linea.MESES, meses):
+        if valor is not None and valor != actual[campo]:
+            cambios.append((campo, actual[campo], valor))
+    if precio is not None:
+        antes = actual['precio_unitario_est']
+        if antes is None or precio != antes:
+            cambios.append(('precio_unitario_est', None if antes is None else str(antes), str(precio)))
+    return cambios
 
 
 def _columnas(valores):
@@ -195,8 +214,8 @@ def leer_excel(archivo, unidades, existentes):
 
 
 def _leer_hoja(ws, fila_titulos, posiciones, unidades, existentes):
-    resultado = {'filas': [], 'errores': [], 'repetidas': []}
-    vistos = set(existentes)
+    resultado = {'filas': [], 'actualizar': [], 'sin_cambios': 0, 'errores': [], 'repetidas': []}
+    vistos = set()
     con_datos = 0
     for numero, valores in enumerate(ws.iter_rows(min_row=fila_titulos + 1, values_only=True), start=fila_titulos + 1):
         def dato(campo):
@@ -230,7 +249,7 @@ def _leer_hoja(ws, fila_titulos, posiciones, unidades, existentes):
                 meses.append(_entero(dato(campo)))
             except ValueError:
                 problemas.append(f'{nombre}: "{_texto(dato(campo))}" no es una cantidad entera válida')
-                meses.append(0)
+                meses.append(None)
         precio = None
         try:
             precio = _precio(dato('precio'))
@@ -241,36 +260,81 @@ def _leer_hoja(ws, fila_titulos, posiciones, unidades, existentes):
             resultado['errores'].append((numero, producto or '—', '; '.join(problemas)))
             continue
         clave = _clave_linea(producto, dependencia, serie, encontrada[0])
-        if clave in vistos:
+        if clave in vistos:  # la misma línea dos veces en el archivo
             resultado['repetidas'].append((numero, producto, encontrada[1], dependencia, serie))
             continue
         vistos.add(clave)
-        resultado['filas'].append({
-            'fila': numero, 'producto': producto, 'dependencia': dependencia, 'serie': serie,
-            'unidad_id': encontrada[0], 'unidad': encontrada[1], 'meses': meses,
-            'total': sum(meses), 'precio': None if precio is None else str(precio),  # texto, para la sesión
-        })
+        actual = existentes.get(clave)
+        if actual is None:  # línea nueva: los meses vacíos cuentan como 0
+            meses_nuevos = [m or 0 for m in meses]
+            resultado['filas'].append({
+                'fila': numero, 'producto': producto, 'dependencia': dependencia, 'serie': serie,
+                'unidad_id': encontrada[0], 'unidad': encontrada[1], 'meses': meses_nuevos,
+                'total': sum(meses_nuevos), 'precio': None if precio is None else str(precio),  # texto, para la sesión
+            })
+            continue
+        cambios = _cambios(actual, meses, precio)  # línea que ya existe: solo cambian las celdas con valor
+        if cambios:
+            resultado['actualizar'].append({
+                'fila': numero, 'id': actual['id'], 'producto': producto, 'dependencia': dependencia,
+                'serie': serie, 'unidad': encontrada[1], 'cambios': cambios,
+            })
+        else:
+            resultado['sin_cambios'] += 1
     return resultado
 
 
 # ---------- Guardar ----------
 
+def nombre_campo(campo):
+    """'ene' -> 'Enero'; 'precio_unitario_est' -> 'Precio est.'."""
+    return dict(zip(Linea.MESES, MESES_NOMBRES)).get(campo, 'Precio est.')
+
+
+def describir_cambios(cambios):
+    """'Enero: 5 → 8; Precio est.: 1500.00 → 1800.50' para mostrar en la vista previa."""
+    return '; '.join(f'{nombre_campo(campo)}: {"vacío" if antes is None else antes} → {despues}'
+                     for campo, antes, despues in cambios)
+
+
 @transaction.atomic
-def crear_lineas(proyeccion, filas, usuario):
-    """Crea las líneas confirmadas (omite las que ya existan) y deja una fila en la bitácora."""
-    existentes = claves_existentes(proyeccion)
-    nuevas = []
-    for f in filas:
+def aplicar_importacion(proyeccion, nuevas, actualizar, usuario):
+    """Crea las líneas nuevas y actualiza las existentes que el usuario confirmó en la vista previa.
+    Deja rastro en la bitácora. Devuelve (creadas, actualizadas)."""
+    existentes = lineas_existentes(proyeccion)
+    crear = []
+    for f in nuevas:
         clave = _clave_linea(f['producto'], f['dependencia'], f['serie'], f['unidad_id'])
         if clave in existentes:
-            continue
-        existentes.add(clave)
-        nuevas.append(Linea(
+            continue  # alguien la creó mientras tanto: no se duplica
+        existentes[clave] = None
+        crear.append(Linea(
             proyeccion=proyeccion, producto=f['producto'], dependencia=f['dependencia'], serie=f['serie'],
             unidad_id=f['unidad_id'], precio_unitario_est=Decimal(f['precio']) if f['precio'] else None,
             **dict(zip(Linea.MESES, f['meses'])),
         ))
-    Linea.objects.bulk_create(nuevas, batch_size=500)
-    if nuevas:
-        registrar(usuario, AccionBitacora.CREAR, proyeccion, 'líneas desde Excel', None, len(nuevas))
-    return len(nuevas)
+    Linea.objects.bulk_create(crear, batch_size=500)
+
+    # Solo se tocan líneas de ESTA proyección, aunque la sesión traiga otros números.
+    lineas = Linea.objects.in_bulk([a['id'] for a in actualizar]) if actualizar else {}
+    rastro = []
+    modificadas = []
+    for a in actualizar:
+        linea = lineas.get(a['id'])
+        if linea is None or linea.proyeccion_id != proyeccion.pk:
+            continue
+        for campo, antes, despues in a['cambios']:
+            setattr(linea, campo, Decimal(despues) if campo == 'precio_unitario_est' else despues)
+            rastro.append(Bitacora(
+                usuario=usuario, accion=AccionBitacora.EDITAR, tabla='linea', registro_id=linea.pk,
+                campo=campo, valor_anterior='' if antes is None else str(antes)[:200],
+                valor_nuevo=str(despues)[:200], motivo='Carga desde Excel',
+            ))
+        modificadas.append(linea)
+    if modificadas:
+        Linea.objects.bulk_update(modificadas, [*Linea.MESES, 'precio_unitario_est'], batch_size=500)
+        Bitacora.objects.bulk_create(rastro, batch_size=500)
+        registrar(usuario, AccionBitacora.EDITAR, proyeccion, 'líneas actualizadas desde Excel', None, len(modificadas))
+    if crear:
+        registrar(usuario, AccionBitacora.CREAR, proyeccion, 'líneas desde Excel', None, len(crear))
+    return len(crear), len(modificadas)

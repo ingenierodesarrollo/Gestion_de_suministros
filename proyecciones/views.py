@@ -9,12 +9,12 @@ from django.urls import reverse
 from .consolidado import MESES_CORTOS, consolidado_por_area, consolidado_por_producto
 from django.http import HttpResponse
 from .exportar import construir_excel
+from django.db import transaction
 
 from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo, AccionBitacora, Bitacora, UnidadMedida
 from .forms import AutorizadoFormSet ,AbrirPeriodoForm, CorreccionLineaForm,LineaForm, ImportarExcelForm
 from .servicios import abrir_periodo, guardar_correccion, valores_linea, alternar_periodo, registrar, registrar_cambios, nombre_registro, nombre_campo
-from .importar import ErrorArchivo, claves_existentes, construir_plantilla, crear_lineas, leer_excel, unidades_validas
-
+from .importar import ErrorArchivo, aplicar_importacion, construir_plantilla, describir_cambios, leer_excel, lineas_existentes, unidades_validas
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def mi_proyeccion(request):
@@ -102,10 +102,14 @@ def editar_linea(request, pk):
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def borrar_linea(request, pk):
-    linea, proyeccion = _linea_editable(request, pk)
+    linea, proyeccion = _linea_editable(request, pk)  # solo en borrador y con el periodo abierto
     if request.method == 'POST':  # solo borra con el botón, nunca con solo abrir un enlace
-        registrar(request.user, AccionBitacora.BORRAR, linea, 'producto', linea.producto, None)
-        linea.delete()
+        with transaction.atomic():  # o se hace todo junto o no se hace nada
+            ajustes = linea.ajustes.count()
+            motivo = f'Se borraron también {ajustes} ajustes de la línea.' if ajustes else ''
+            registrar(request.user, AccionBitacora.BORRAR, linea, 'producto', linea.producto, None, motivo)
+            linea.ajustes.all().delete()  # solo existen si la proyección fue aprobada y luego volvió a borrador
+            linea.delete()
     return redirect('proyecciones:detalle', pk=proyeccion.pk)
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -286,32 +290,38 @@ def _proyeccion_editable(request, pk):
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def importar_excel(request, pk):
-    """Sube el Excel y muestra la vista previa. Todavía no guarda líneas."""
+    """Sube el Excel y muestra la vista previa. Todavía no guarda nada."""
     proyeccion = _proyeccion_editable(request, pk)
     form = ImportarExcelForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
         try:
-            resultado = leer_excel(form.cleaned_data['archivo'], unidades_validas(), claves_existentes(proyeccion))
+            resultado = leer_excel(form.cleaned_data['archivo'], unidades_validas(), lineas_existentes(proyeccion))
         except ErrorArchivo as error:
             form.add_error('archivo', str(error))
         else:
-            # Las filas buenas esperan en la sesión hasta que el usuario confirme.
-            request.session[f'importacion_{proyeccion.pk}'] = resultado['filas']
+            for a in resultado['actualizar']:
+                a['texto'] = describir_cambios(a['cambios'])
+            # Lo nuevo y lo que se actualiza espera en la sesión hasta que el usuario confirme.
+            request.session[f'importacion_{proyeccion.pk}'] = {
+                'nuevas': resultado['filas'], 'actualizar': resultado['actualizar'],
+            }
             return render(request, 'proyecciones/importar_vista_previa.html', {
-                'proyeccion': proyeccion, 'resultado': resultado, 'muestra': resultado['filas'][:50],
+                'proyeccion': proyeccion, 'resultado': resultado,
+                'muestra': resultado['filas'][:50], 'muestra_actualizar': resultado['actualizar'][:50],
             })
     return render(request, 'proyecciones/importar_excel.html', {'form': form, 'proyeccion': proyeccion})
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def confirmar_importacion(request, pk):
-    """Crea las líneas que quedaron en la vista previa."""
+    """Crea las líneas nuevas y actualiza las existentes que quedaron en la vista previa."""
     proyeccion = _proyeccion_editable(request, pk)
     if request.method == 'POST':  # solo con el botón Confirmar
-        filas = request.session.pop(f'importacion_{proyeccion.pk}', None)
-        if filas:
-            creadas = crear_lineas(proyeccion, filas, request.user)
-            messages.success(request, f'Se agregaron {creadas} líneas desde el Excel.')
+        pendiente = request.session.pop(f'importacion_{proyeccion.pk}', None)
+        if pendiente:
+            creadas, actualizadas = aplicar_importacion(
+                proyeccion, pendiente['nuevas'], pendiente['actualizar'], request.user)
+            messages.success(request, f'Se agregaron {creadas} líneas y se actualizaron {actualizadas} desde el Excel.')
         else:
             messages.error(request, 'No hay una carga pendiente. Suba el archivo de nuevo.')
     return redirect('proyecciones:detalle', pk=proyeccion.pk)

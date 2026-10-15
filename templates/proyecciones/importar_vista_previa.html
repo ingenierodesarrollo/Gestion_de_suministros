@@ -7,8 +7,10 @@
     <h1>Vista previa · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }}</h1>
     <p>Todavía no se ha guardado nada. Revise el resumen y confirme.</p>
     <div class="resumen-tarjetas">
-      <div class="dato destacado"><span>Líneas por agregar</span><strong>{{ resultado.filas|length }}</strong></div>
-      <div class="dato"><span>Repetidas (se omiten)</span><strong>{{ resultado.repetidas|length }}</strong></div>
+      <div class="dato destacado"><span>Líneas nuevas</span><strong>{{ resultado.filas|length }}</strong></div>
+      <div class="dato destacado"><span>Líneas por actualizar</span><strong>{{ resultado.actualizar|length }}</strong></div>
+      <div class="dato"><span>Sin cambios</span><strong>{{ resultado.sin_cambios }}</strong></div>
+      <div class="dato"><span>Repetidas en el archivo (se omiten)</span><strong>{{ resultado.repetidas|length }}</strong></div>
       <div class="dato"><span>Con errores (no se cargan)</span><strong>{{ resultado.errores|length }}</strong></div>
     </div>
 
@@ -27,7 +29,7 @@
 
     {% if resultado.repetidas %}
       <h2>Filas repetidas</h2>
-      <p>Ya están en la proyección o aparecen antes en el mismo archivo (mismo producto, dependencia, serie y unidad).</p>
+      <p>Aparecen antes en el mismo archivo (mismo producto, dependencia, serie y unidad). Solo se usa la primera.</p>
       <table class="tabla">
         <thead><tr><th class="num">Fila</th><th>Producto</th><th>Dependencia</th><th>Serie</th><th>Unidad</th></tr></thead>
         <tbody>
@@ -38,8 +40,21 @@
       </table>
     {% endif %}
 
+    {% if resultado.actualizar %}
+      <h2>Líneas que se actualizarán{% if resultado.actualizar|length > muestra_actualizar|length %} (primeras {{ muestra_actualizar|length }}){% endif %}</h2>
+      <p>Solo cambian las celdas que traen valor. Una celda vacía no borra lo que ya había.</p>
+      <table class="tabla">
+        <thead><tr><th class="num">Fila</th><th>Producto</th><th>Dependencia</th><th>Qué cambia</th></tr></thead>
+        <tbody>
+          {% for a in muestra_actualizar %}
+            <tr><td class="num">{{ a.fila }}</td><td>{{ a.producto }}</td><td>{{ a.dependencia|default:"—" }}</td><td>{{ a.texto }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
     {% if resultado.filas %}
-      <h2>Líneas por agregar{% if resultado.filas|length > muestra|length %} (primeras {{ muestra|length }}){% endif %}</h2>
+      <h2>Líneas nuevas{% if resultado.filas|length > muestra|length %} (primeras {{ muestra|length }}){% endif %}</h2>
       <table class="tabla">
         <thead>
           <tr><th class="num">Fila</th><th>Producto</th><th>Dependencia</th><th>Unidad</th><th class="num">Total año</th><th class="num">Precio est.</th></tr>
@@ -57,12 +72,15 @@
           {% endfor %}
         </tbody>
       </table>
+    {% endif %}
+
+    {% if resultado.filas or resultado.actualizar %}
       <form method="post" action="{% url 'proyecciones:confirmar_importacion' proyeccion.pk %}">
         {% csrf_token %}
-        <button type="submit">Confirmar y agregar {{ resultado.filas|length }} líneas</button>
+        <button type="submit">Confirmar: agregar {{ resultado.filas|length }} y actualizar {{ resultado.actualizar|length }}</button>
       </form>
     {% else %}
-      <p class="aviso error">No hay líneas nuevas para agregar.</p>
+      <p class="aviso error">No hay nada nuevo que agregar ni actualizar.</p>
     {% endif %}
 
     <div class="acciones">

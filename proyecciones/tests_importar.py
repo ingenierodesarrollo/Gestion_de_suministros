@@ -7,7 +7,7 @@ from django.urls import reverse
 from openpyxl import Workbook, load_workbook
 
 from .importar import construir_plantilla
-from .models import Bitacora, EstadoProyeccion, Linea
+from .models import Ajuste, Bitacora, EstadoProyeccion, Linea
 from .tests import BaseProyeccionTest
 
 
@@ -48,7 +48,7 @@ class ImportarExcelTest(BaseProyeccionTest):
     def test_vista_previa_no_guarda(self):
         respuesta = self.subir(['Jeringa 5 ml', '', '', 1, 2, *[0] * 10, 'Unidad', 500])
         self.assertEqual(respuesta.status_code, 200)
-        self.assertContains(respuesta, 'Confirmar y agregar 1 líneas')
+        self.assertContains(respuesta, 'Confirmar: agregar 1 y actualizar 0')
         self.assertEqual(self.proy_urg.lineas.count(), 0)
 
     def test_confirmar_crea_lineas_y_bitacora(self):
@@ -169,3 +169,69 @@ class LineaSinUnidadTest(BaseProyeccionTest):
         linea = self.proy_urg.lineas.get()
         self.assertEqual(linea.unidad, self.unidad)
         self.assertIsNone(linea.precio_unitario_est)
+
+
+class ActualizarDesdeExcelTest(BaseProyeccionTest):
+    """Subir otro Excel con datos nuevos para líneas que ya existen."""
+
+    def setUp(self):
+        self.client.force_login(self.coord_urg)
+        self.linea = self.crear_linea(self.proy_urg, producto='Guantes M', dependencia='Urgencias',
+                                      ene=5, feb=2, precio_unitario_est=Decimal('1500'))
+        self.url = reverse('proyecciones:importar_excel', args=[self.proy_urg.pk])
+        self.url_confirmar = reverse('proyecciones:confirmar_importacion', args=[self.proy_urg.pk])
+
+    def subir(self, *filas):
+        return self.client.post(self.url, {'archivo': excel(*filas)})
+
+    def test_actualiza_meses_y_precio(self):
+        self.subir(['Guantes M', 'Urgencias', '', 8, None, *[None] * 10, 'Unidad', 1800])
+        self.client.post(self.url_confirmar)
+        self.linea.refresh_from_db()
+        self.assertEqual(self.linea.ene, 8)
+        self.assertEqual(self.linea.feb, 2)  # celda vacía: no cambia
+        self.assertEqual(self.linea.precio_unitario_est, Decimal('1800.00'))
+        self.assertEqual(self.proy_urg.lineas.count(), 1)  # no se duplicó
+
+    def test_un_cero_escrito_si_actualiza(self):
+        self.subir(['Guantes M', 'Urgencias', '', 0, *[None] * 11, 'Unidad', None])
+        self.client.post(self.url_confirmar)
+        self.linea.refresh_from_db()
+        self.assertEqual(self.linea.ene, 0)
+
+    def test_celdas_vacias_no_cambian_nada(self):
+        respuesta = self.subir(['Guantes M', 'Urgencias', '', *MESES_VACIOS, 'Unidad', None])
+        self.assertContains(respuesta, 'No hay nada nuevo que agregar ni actualizar')
+
+    def test_vista_previa_no_guarda_los_cambios(self):
+        respuesta = self.subir(['Guantes M', 'Urgencias', '', 9, *[None] * 11, 'Unidad', None])
+        self.assertContains(respuesta, 'Enero: 5 → 9')
+        self.linea.refresh_from_db()
+        self.assertEqual(self.linea.ene, 5)
+
+    def test_nuevas_y_actualizadas_juntas_con_bitacora(self):
+        self.subir(['Guantes M', 'Urgencias', '', 6, *[None] * 11, 'Unidad', None],
+                   ['Gasa', '', '', *MESES_VACIOS, 'Unidad', 300])
+        self.client.post(self.url_confirmar)
+        self.assertEqual(self.proy_urg.lineas.count(), 2)
+        self.assertTrue(Bitacora.objects.filter(registro_id=self.linea.pk, campo='ene', valor_anterior='5',
+                                                valor_nuevo='6', motivo='Carga desde Excel').exists())
+        self.assertTrue(Bitacora.objects.filter(campo='líneas actualizadas desde Excel', valor_nuevo='1').exists())
+        self.assertTrue(Bitacora.objects.filter(campo='líneas desde Excel', valor_nuevo='1').exists())
+
+    def test_confirmar_dos_veces_no_repite(self):
+        self.subir(['Guantes M', 'Urgencias', '', 6, *[None] * 11, 'Unidad', None])
+        self.client.post(self.url_confirmar)
+        self.client.post(self.url_confirmar)
+        self.assertEqual(Bitacora.objects.filter(registro_id=self.linea.pk, campo='ene').count(), 1)
+        
+class BorrarLineaConAjustesTest(BaseProyeccionTest):
+
+    def test_en_borrador_se_borra_aunque_tenga_ajustes(self):
+        linea = self.crear_linea(self.proy_urg)
+        Ajuste.objects.create(linea=linea, campo='ene', valor_aprobado='1', valor_nuevo='0',
+                              justificacion='prueba', hecho_por=self.admin)
+        self.client.force_login(self.coord_urg)
+        self.client.post(reverse('proyecciones:borrar_linea', args=[linea.pk]))
+        self.assertFalse(Linea.objects.filter(pk=linea.pk).exists())
+        self.assertTrue(Bitacora.objects.filter(accion='borrar', motivo__contains='1 ajustes').exists())
