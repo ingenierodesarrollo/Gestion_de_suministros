@@ -44,7 +44,7 @@
         <th>Área</th>
         <th>Estado</th>
         <th>Enviada</th>
-        <th class="num">Líneas</th>
+        <th class="centro">Líneas</th>
         <th></th>
       </tr>
     </thead>
@@ -55,7 +55,7 @@
         <td>{{ p.area.nombre }}</td>
         <td><span class="etiqueta estado-{{ p.estado }}">{{ p.get_estado_display }}</span></td>
         <td>{{ p.fecha_envio|date:"d/m/Y"|default:"—" }}</td>
-        <td class="num">{{ p.lineas.count }}</td>
+        <td class="centro">{{ p.lineas.count }}</td>
         <td>
           {% if p.estado != 'borrador' %}
           <a class="boton-tabla" href="{% url 'proyecciones:revisar' p.pk %}">Revisar</a>

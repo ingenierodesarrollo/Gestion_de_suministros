@@ -1,14 +1,25 @@
 {% extends 'base.html' %}
 
-{% block titulo %}Abrir periodo{% endblock %}
+{% block titulo %}Abrir periodo · Gestión de suministros{% endblock %}
 
 {% block contenido %}
-<h1>Abrir periodo de proyección</h1>
-<p>Se creará una proyección en borrador para cada área activa. Si el año ya existe, solo se crean las que falten.</p>
-
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Abrir periodo</button>
-</form>
+<div class="tarjeta formulario">
+  <h1>Abrir periodo de proyección</h1>
+  <p class="ayuda">Se creará una proyección en borrador para cada área activa. Si el año ya existe, solo se crean las que falten.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for campo in form %}
+    <div class="campo">
+      <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+      {{ campo }}
+      {% for e in campo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </div>
+    {% endfor %}
+    <div class="botones-form">
+      <button type="submit">Abrir periodo</button>
+      <a class="boton-secundario" href="{% url 'proyecciones:revision' %}">Cancelar</a>
+    </div>
+  </form>
+</div>
 {% endblock %}

@@ -5,7 +5,7 @@
 {% block contenido %}
   <div class="tarjeta">
     <h1>Subir Excel · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }}</h1>
-    <p>Use la <a href="{% url 'proyecciones:plantilla_excel' %}">plantilla Excel</a>. Cada fila será una línea de la proyección.</p>
+    <p>Use la <a class="boton-tabla" href="{% url 'proyecciones:plantilla_excel' %}">plantilla Excel</a>. Cada fila será una línea de la proyección.</p>
     <ul>
       <li>Solo es obligatoria la columna Equipo / Producto / Servicio.</li>
       <li>Los meses vacíos quedan en 0.</li>
