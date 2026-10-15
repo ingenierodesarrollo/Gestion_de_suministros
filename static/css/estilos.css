@@ -131,3 +131,4 @@ a.boton:hover { background: #0f1a3d; }
 .tabla .boton-tabla { min-width: 6.5rem; box-sizing: border-box; text-align: center; }
 .acciones { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 .acciones-tabla { display: flex; gap: 0.4rem; align-items: center; }
+.falta { color: #991b1b; font-weight: 600; }

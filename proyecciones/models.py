@@ -129,6 +129,8 @@ class Linea(models.Model):
         'precio unitario estimado',
         max_digits=12,
         decimal_places=2,
+        null=True,
+        blank=True,
         validators=[MinValueValidator(Decimal('0.01'))],
     )
     cantidad_autorizada = models.PositiveIntegerField(

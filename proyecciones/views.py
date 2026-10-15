@@ -10,9 +10,10 @@ from .consolidado import MESES_CORTOS, consolidado_por_area, consolidado_por_pro
 from django.http import HttpResponse
 from .exportar import construir_excel
 
-from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo, AccionBitacora, Bitacora
-from .forms import AutorizadoFormSet ,AbrirPeriodoForm, CorreccionLineaForm,LineaForm
+from .models import EstadoPeriodo, EstadoProyeccion, ProductoSugerido, Linea, ProyeccionArea, Periodo, AccionBitacora, Bitacora, UnidadMedida
+from .forms import AutorizadoFormSet ,AbrirPeriodoForm, CorreccionLineaForm,LineaForm, ImportarExcelForm
 from .servicios import abrir_periodo, guardar_correccion, valores_linea, alternar_periodo, registrar, registrar_cambios, nombre_registro, nombre_campo
+from .importar import ErrorArchivo, claves_existentes, construir_plantilla, crear_lineas, leer_excel, unidades_validas
 
 
 @rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -33,8 +34,10 @@ def detalle_proyeccion(request, pk):
     total_unidades = sum(linea.total_anual for linea in lineas)
     puede_editar = (proyeccion.estado == EstadoProyeccion.BORRADOR
                     and proyeccion.periodo.estado == EstadoPeriodo.ABIERTO)
+    sin_precio = sum(1 for linea in lineas if linea.precio_unitario_est is None)
     return render(request, 'proyecciones/detalle.html', {
         'proyeccion': proyeccion, 'lineas': lineas, 'costo_total': costo_total, 'puede_editar': puede_editar, 'total_unidades': total_unidades,
+        'sin_precio': sin_precio,
     })
     
 def _obtener_proyeccion(request, pk):
@@ -110,8 +113,18 @@ def enviar_proyeccion(request, pk):
     proyeccion = _obtener_proyeccion(request, pk)
     _exigir_periodo_abierto(proyeccion)
     if request.method == 'POST' and proyeccion.estado == EstadoProyeccion.BORRADOR:
+        sin_precio = proyeccion.lineas.filter(precio_unitario_est__isnull=True).count()
+        sin_cantidad = proyeccion.lineas.filter(**{mes: 0 for mes in Linea.MESES}).count()
         if not proyeccion.lineas.exists():
             messages.error(request, 'Agrega al menos una linea antes de enviar.')
+        elif sin_precio or sin_cantidad:
+            faltan = []
+            if sin_precio:
+                faltan.append(f'{sin_precio} sin precio')
+            if sin_cantidad:
+                faltan.append(f'{sin_cantidad} sin ninguna cantidad')
+            messages.error(request, 'No se puede enviar: hay líneas ' + ' y '.join(faltan)
+                           + '. Complétalas o bórralas.')
         else:
             proyeccion.estado = EstadoProyeccion.ENVIADA
             proyeccion.fecha_envio = timezone.now()
@@ -249,3 +262,56 @@ def descargar_consolidado(request, anio):
     respuesta['Content-Disposition'] = f'attachment; filename="Consolidado_proyeccion_{periodo.anio}.xlsx"'
     return respuesta
 
+
+@rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def descargar_plantilla(request):
+    """Plantilla Excel para cargar muchas líneas de una vez."""
+    unidades = list(UnidadMedida.objects.values_list('nombre', flat=True))
+    respuesta = HttpResponse(
+        construir_plantilla(unidades),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    respuesta['Content-Disposition'] = 'attachment; filename="Plantilla_proyeccion.xlsx"'
+    return respuesta
+
+
+def _proyeccion_editable(request, pk):
+    """La proyección solo si es del área del usuario, sigue en borrador y el periodo está abierto."""
+    proyeccion = _obtener_proyeccion(request, pk)
+    if proyeccion.estado != EstadoProyeccion.BORRADOR:
+        raise PermissionDenied
+    _exigir_periodo_abierto(proyeccion)
+    return proyeccion
+
+
+@rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def importar_excel(request, pk):
+    """Sube el Excel y muestra la vista previa. Todavía no guarda líneas."""
+    proyeccion = _proyeccion_editable(request, pk)
+    form = ImportarExcelForm(request.POST or None, request.FILES or None)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            resultado = leer_excel(form.cleaned_data['archivo'], unidades_validas(), claves_existentes(proyeccion))
+        except ErrorArchivo as error:
+            form.add_error('archivo', str(error))
+        else:
+            # Las filas buenas esperan en la sesión hasta que el usuario confirme.
+            request.session[f'importacion_{proyeccion.pk}'] = resultado['filas']
+            return render(request, 'proyecciones/importar_vista_previa.html', {
+                'proyeccion': proyeccion, 'resultado': resultado, 'muestra': resultado['filas'][:50],
+            })
+    return render(request, 'proyecciones/importar_excel.html', {'form': form, 'proyeccion': proyeccion})
+
+
+@rol_requerido(Rol.COORDINADOR, Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+def confirmar_importacion(request, pk):
+    """Crea las líneas que quedaron en la vista previa."""
+    proyeccion = _proyeccion_editable(request, pk)
+    if request.method == 'POST':  # solo con el botón Confirmar
+        filas = request.session.pop(f'importacion_{proyeccion.pk}', None)
+        if filas:
+            creadas = crear_lineas(proyeccion, filas, request.user)
+            messages.success(request, f'Se agregaron {creadas} líneas desde el Excel.')
+        else:
+            messages.error(request, 'No hay una carga pendiente. Suba el archivo de nuevo.')
+    return redirect('proyecciones:detalle', pk=proyeccion.pk)

@@ -32,7 +32,7 @@
             <td class="num">{{ f.instance.total_anual }}</td>
             <td class="num">{{ f.instance.costo|floatformat:"2g" }}</td>
             <td class="num">{% if proyeccion.estado == 'enviada' %}{{ f.cantidad_autorizada }}{{ f.cantidad_autorizada.errors }}{% else %}{{ f.instance.cantidad_autorizada }}{% endif %}</td>
-            <td><a href="{% url 'proyecciones:corregir_linea' f.instance.pk %}">{% if proyeccion.estado == 'aprobada' %}Ajustar{% else %}Corregir{% endif %}</a></td>
+            <td><a class="boton-tabla" href="{% url 'proyecciones:corregir_linea' f.instance.pk %}">{% if proyeccion.estado == 'aprobada' %}Ajustar{% else %}Corregir{% endif %}</a></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -50,6 +50,6 @@
     {% if proyeccion.aprobada_por %}
       <p>Aprobada por {{ proyeccion.aprobada_por.nombre }} el {{ proyeccion.fecha_aprobacion|date:"d/m/Y H:i" }}</p>
     {% endif %}
-    <p><a href="{% url 'proyecciones:revision' %}">Volver a revisión</a></p>
+    <p><a class="boton-tabla" href="{% url 'proyecciones:revision' %}">Volver a revisión</a></p>
   </div>
 {% endblock %}

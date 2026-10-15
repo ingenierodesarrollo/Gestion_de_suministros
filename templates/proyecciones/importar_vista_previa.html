@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block titulo %}Vista previa de la carga · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Vista previa · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }}</h1>
+    <p>Todavía no se ha guardado nada. Revise el resumen y confirme.</p>
+    <div class="resumen-tarjetas">
+      <div class="dato destacado"><span>Líneas por agregar</span><strong>{{ resultado.filas|length }}</strong></div>
+      <div class="dato"><span>Repetidas (se omiten)</span><strong>{{ resultado.repetidas|length }}</strong></div>
+      <div class="dato"><span>Con errores (no se cargan)</span><strong>{{ resultado.errores|length }}</strong></div>
+    </div>
+
+    {% if resultado.errores %}
+      <h2>Filas con errores</h2>
+      <p class="aviso error">Estas filas no se cargarán. Corríjalas en el Excel y súbalo de nuevo, o agréguelas a mano después.</p>
+      <table class="tabla">
+        <thead><tr><th class="num">Fila</th><th>Producto</th><th>Qué está mal</th></tr></thead>
+        <tbody>
+          {% for e in resultado.errores %}
+            <tr><td class="num">{{ e.0 }}</td><td>{{ e.1 }}</td><td>{{ e.2 }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    {% if resultado.repetidas %}
+      <h2>Filas repetidas</h2>
+      <p>Ya están en la proyección o aparecen antes en el mismo archivo (mismo producto y unidad).</p>
+      <table class="tabla">
+        <thead><tr><th class="num">Fila</th><th>Producto</th><th>Unidad</th></tr></thead>
+        <tbody>
+          {% for r in resultado.repetidas %}
+            <tr><td class="num">{{ r.0 }}</td><td>{{ r.1 }}</td><td>{{ r.2 }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    {% if resultado.filas %}
+      <h2>Líneas por agregar{% if resultado.filas|length > muestra|length %} (primeras {{ muestra|length }}){% endif %}</h2>
+      <table class="tabla">
+        <thead>
+          <tr><th class="num">Fila</th><th>Producto</th><th>Dependencia</th><th>Unidad</th><th class="num">Total año</th><th class="num">Precio est.</th></tr>
+        </thead>
+        <tbody>
+          {% for f in muestra %}
+            <tr>
+              <td class="num">{{ f.fila }}</td>
+              <td>{{ f.producto }}</td>
+              <td>{{ f.dependencia|default:"—" }}</td>
+              <td>{{ f.unidad }}</td>
+              <td class="num">{{ f.total }}</td>
+              <td class="num">{{ f.precio|floatformat:"2g"|default:"Falta precio" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <form method="post" action="{% url 'proyecciones:confirmar_importacion' proyeccion.pk %}">
+        {% csrf_token %}
+        <button type="submit">Confirmar y agregar {{ resultado.filas|length }} líneas</button>
+      </form>
+    {% else %}
+      <p class="aviso error">No hay líneas nuevas para agregar.</p>
+    {% endif %}
+
+    <div class="acciones">
+      <a class="boton-tabla" href="{% url 'proyecciones:importar_excel' proyeccion.pk %}">Subir otro archivo</a>
+      <a class="boton-tabla" href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a>
+    </div>
+  </div>
+{% endblock %}

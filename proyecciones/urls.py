@@ -20,4 +20,7 @@ urlpatterns = [
     path('bitacora/', views.bitacora, name='bitacora'),
     path('consolidado/', views.consolidado_vista, name='consolidado'),
     path('consolidado/<int:anio>/excel/', views.descargar_consolidado, name='descargar_consolidado'),
+    path('plantilla-excel/', views.descargar_plantilla, name='plantilla_excel'),
+    path('<int:pk>/importar-excel/', views.importar_excel, name='importar_excel'),
+    path('<int:pk>/importar-excel/confirmar/', views.confirmar_importacion, name='confirmar_importacion'),
 ]

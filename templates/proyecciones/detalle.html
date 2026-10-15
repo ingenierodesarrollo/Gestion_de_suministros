@@ -11,6 +11,9 @@
     {% if proyeccion.estado == 'borrador' %}
     <p>Fecha límite de envío: {% include "proyecciones/_limite.html" with periodo=proyeccion.periodo %}</p>
     {% endif %}
+    {% if sin_precio and puede_editar %}
+      <p class="aviso error">Hay {{ sin_precio }} líneas sin precio. Complétalas antes de enviar.</p>
+    {% endif %}
     {% if proyeccion.estado == 'borrador' and not puede_editar %}
       <p class="aviso error">El periodo está cerrado: ya no se pueden agregar ni cambiar líneas. La coordinadora debe reabrirlo.</p>
     {% endif %}
@@ -41,7 +44,7 @@
           <td>{{ l.dependencia|default:"—" }}</td>
           <td>{{ l.unidad }}</td>
           <td class="num">{{ l.total_anual }}</td>
-          <td class="num">{{ l.precio_unitario_est|floatformat:"2g" }}</td>
+          <td class="num">{% if l.precio_unitario_est is None %}<span class="falta">Falta precio</span>{% else %}{{ l.precio_unitario_est|floatformat:"2g" }}{% endif %}</td>
           <td class="num">{{ l.costo|floatformat:"2g" }}</td>
           <td>
             {% if puede_editar %}
@@ -69,8 +72,12 @@
       </tfoot>
     </table>
     {% if puede_editar %}
-      <p><a class="boton-tabla" href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a></p>
-      {% if lineas %}
+      <div class="acciones">
+        <a class="boton-tabla" href="{% url 'proyecciones:agregar_linea' proyeccion.pk %}">+ Agregar línea</a>
+        <a class="boton-tabla" href="{% url 'proyecciones:plantilla_excel' %}">Descargar plantilla Excel</a>
+        <a class="boton-tabla" href="{% url 'proyecciones:importar_excel' proyeccion.pk %}">Subir Excel</a>
+      </div>
+    {% if lineas %}
         <form method="post" action="{% url 'proyecciones:enviar' proyeccion.pk %}"
           onsubmit="return confirm('Después de enviar ya no podrás modificarla. ¿Enviar?');">
           {% csrf_token %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block titulo %}Subir Excel · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Subir Excel · {{ proyeccion.area.nombre }} {{ proyeccion.periodo }}</h1>
+    <p>Use la <a href="{% url 'proyecciones:plantilla_excel' %}">plantilla Excel</a>. Cada fila será una línea de la proyección.</p>
+    <ul>
+      <li>Solo es obligatoria la columna Equipo / Producto / Servicio.</li>
+      <li>Los meses vacíos quedan en 0.</li>
+      <li>El precio estimado es opcional: si falta, la línea queda con "Falta precio" y debe completarse antes de enviar.</li>
+      <li>La unidad es opcional: si queda vacía, la línea queda en "Unidad". Si la escribe, debe ser una de la lista.</li>
+      <li>También puede subir el formato FR-GDS-11 de años anteriores tal cual.</li>
+      <li>Nada se guarda hasta que confirme en la vista previa.</li>
+    </ul>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <label>{{ form.archivo.label }}{{ form.archivo }}{{ form.archivo.errors }}</label>
+      <button type="submit">Revisar archivo</button>
+    </form>
+    <p><a class="boton-tabla" href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a></p>
+  </div>
+{% endblock %}
