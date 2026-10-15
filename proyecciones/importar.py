@@ -21,6 +21,7 @@ MESES_NOMBRES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio',
 COLUMNAS = ['Equipo / Producto / Servicio', 'Dependencia', 'Serie', *MESES_NOMBRES, 'Unidad', 'Precio est.']
 HOJA = 'Productos'
 UNIDAD_POR_DEFECTO = 'Unidad'
+PREFIJOS_IGNORADOS = ('EJEMPLO', 'TOTAL', 'SUBTOTAL', 'COSTO TOTAL')
 FILAS_PARA_BUSCAR_TITULOS = 20
 MAX_FILAS = 2000                 # filas con datos que se aceptan en un archivo
 MAX_BYTES = 5 * 1024 * 1024      # 5 MB
@@ -145,10 +146,16 @@ def unidades_validas():
     return {u.nombre.strip().lower(): (u.pk, u.nombre) for u in UnidadMedida.objects.all()}
 
 
+def _clave_linea(producto, dependencia, serie, unidad_id):
+    """Dos filas son la misma línea solo si coinciden producto, dependencia, serie y unidad.
+    Así "Guantes M" de dos dependencias, o dos monitores con series distintas, no se toman por repetidos."""
+    return (' '.join(producto.lower().split()), dependencia.strip().lower(), serie.strip().lower(), unidad_id)
+
+
 def claves_existentes(proyeccion):
-    """Producto + unidad de las líneas que ya tiene la proyección, para no repetirlas."""
-    return {(producto.strip().lower(), unidad_id)
-            for producto, unidad_id in proyeccion.lineas.values_list('producto', 'unidad_id')}
+    """Claves de las líneas que ya tiene la proyección, para no repetirlas."""
+    return {_clave_linea(*datos)
+            for datos in proyeccion.lineas.values_list('producto', 'dependencia', 'serie', 'unidad_id')}
 
 
 def _columnas(valores):
@@ -199,8 +206,8 @@ def _leer_hoja(ws, fila_titulos, posiciones, unidades, existentes):
         producto, dependencia, serie, unidad = (_texto(dato(c)) for c in ('producto', 'dependencia', 'serie', 'unidad'))
         if not any(_texto(dato(c)) for c in posiciones):
             continue  # fila vacía
-        if producto.upper().startswith('EJEMPLO'):
-            continue
+        if producto.upper().startswith(PREFIJOS_IGNORADOS):
+            continue  # ejemplo de la plantilla o fila de totales del Excel viejo
         con_datos += 1
         if con_datos > MAX_FILAS:
             raise ErrorArchivo(f'El archivo tiene más de {MAX_FILAS} productos. Divídalo en dos archivos.')
@@ -233,9 +240,9 @@ def _leer_hoja(ws, fila_titulos, posiciones, unidades, existentes):
         if problemas:
             resultado['errores'].append((numero, producto or '—', '; '.join(problemas)))
             continue
-        clave = (producto.lower(), encontrada[0])
+        clave = _clave_linea(producto, dependencia, serie, encontrada[0])
         if clave in vistos:
-            resultado['repetidas'].append((numero, producto, encontrada[1]))
+            resultado['repetidas'].append((numero, producto, encontrada[1], dependencia, serie))
             continue
         vistos.add(clave)
         resultado['filas'].append({
@@ -254,7 +261,7 @@ def crear_lineas(proyeccion, filas, usuario):
     existentes = claves_existentes(proyeccion)
     nuevas = []
     for f in filas:
-        clave = (f['producto'].lower(), f['unidad_id'])
+        clave = _clave_linea(f['producto'], f['dependencia'], f['serie'], f['unidad_id'])
         if clave in existentes:
             continue
         existentes.add(clave)

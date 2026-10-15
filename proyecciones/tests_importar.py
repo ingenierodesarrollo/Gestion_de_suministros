@@ -78,6 +78,22 @@ class ImportarExcelTest(BaseProyeccionTest):
         self.client.post(self.url_confirmar)
         self.assertEqual(self.proy_urg.lineas.count(), 1)  # solo la que ya estaba
 
+    def test_mismo_producto_en_otra_dependencia_o_serie_no_es_repetido(self):
+        self.subir(['Guantes M', 'Urgencias', '', *MESES_VACIOS, 'Unidad', None],
+                   ['Guantes M', 'Cirugia', '', *MESES_VACIOS, 'Unidad', None],      # otra dependencia
+                   ['Monitor', '', 'SN-1', *MESES_VACIOS, 'Unidad', None],
+                   ['Monitor', '', 'SN-2', *MESES_VACIOS, 'Unidad', None],           # otra serie
+                   ['guantes  m', 'urgencias', '', *MESES_VACIOS, 'Unidad', None])   # este sí es repetido
+        self.client.post(self.url_confirmar)
+        self.assertEqual(self.proy_urg.lineas.count(), 4)
+
+    def test_filas_de_total_se_ignoran(self):
+        self.subir(['Gasa', '', '', *MESES_VACIOS, 'Unidad', None],
+                   ['TOTAL', '', '', *MESES_VACIOS, None, 12345],
+                   ['Costo total', '', '', *MESES_VACIOS, None, 12345])
+        self.client.post(self.url_confirmar)
+        self.assertEqual(list(self.proy_urg.lineas.values_list('producto', flat=True)), ['Gasa'])
+
     def test_archivo_que_no_es_excel(self):
         archivo = SimpleUploadedFile('carga.xlsx', b'esto no es un excel')
         respuesta = self.client.post(self.url, {'archivo': archivo})
