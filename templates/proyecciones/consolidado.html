@@ -60,38 +60,6 @@
   {% empty %}
   <p>Ninguna área ha enviado su proyección de este año.</p>
   {% endfor %}
-
-  <h2>Por producto (suma de todas las áreas)</h2>
-  <div class="desplazable">
-    <table class="tabla tabla-chica">
-      <thead>
-        <tr>
-          <th>Producto</th>
-          <th>Unidad</th>
-          <th>Áreas</th>{% for m in meses %}<th class="num">{{ m }}</th>{% endfor %}<th class="num">Total</th>
-          <th class="num">Autorizado</th>
-          <th class="num">Costo</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for g in productos %}
-        <tr>
-          <td>{{ g.producto }}</td>
-          <td>{{ g.unidad }}</td>
-          <td>{{ g.areas }}</td>
-          {% for v in g.meses %}<td class="num">{{ v }}</td>{% endfor %}
-          <td class="num">{{ g.total }}</td>
-          <td class="num">{{ g.autorizado|default_if_none:"—" }}</td>
-          <td class="num">{{ g.costo|floatformat:"2g" }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="18">Sin datos.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
   {% endif %}
 </div>
 {% endblock %}

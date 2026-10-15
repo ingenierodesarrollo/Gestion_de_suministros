@@ -7,9 +7,9 @@ from openpyxl import load_workbook
 from areas.models import Area
 
 from . import tests as base
-from .consolidado import consolidado_por_area, consolidado_por_producto
-from .exportar import NOMBRE_RESUMEN, _nombre_hoja
-from .models import EstadoProyeccion, ProyeccionArea, UnidadMedida
+from .consolidado import consolidado_por_area
+from .exportar import NOMBRE_SIN_DATOS, _nombre_hoja
+from .models import EstadoProyeccion, ProyeccionArea
 
 
 class ConsolidadoCalculoTest(base.BaseProyeccionTest):
@@ -22,27 +22,10 @@ class ConsolidadoCalculoTest(base.BaseProyeccionTest):
             p.estado = EstadoProyeccion.ENVIADA
             p.save()
 
-    def test_suma_por_producto_entre_areas(self):
-        filas = consolidado_por_producto(self.periodo)
-        self.assertEqual(len(filas), 1)
-        self.assertEqual(filas[0]['total'], 17)
-        self.assertEqual(filas[0]['meses'][0], 15)
-        self.assertEqual(filas[0]['meses'][1], 2)
-        self.assertEqual(filas[0]['areas'], 'Laboratorio, Urgencias')
-        self.assertEqual(filas[0]['costo'], Decimal('25500'))
-
     def test_un_borrador_no_entra(self):
         self.proy_lab.estado = EstadoProyeccion.BORRADOR
         self.proy_lab.save()
-        filas = consolidado_por_producto(self.periodo)
-        self.assertEqual(filas[0]['total'], 10)
-        self.assertEqual(filas[0]['areas'], 'Urgencias')
         self.assertEqual(len(consolidado_por_area(self.periodo)), 1)
-
-    def test_unidad_distinta_no_se_suma(self):
-        caja = UnidadMedida.objects.create(nombre='Caja x 100')
-        self.crear_linea(self.proy_lab, producto='Guantes', unidad=caja)
-        self.assertEqual(len(consolidado_por_producto(self.periodo)), 2)
 
     def test_cada_area_va_por_separado(self):
         areas = consolidado_por_area(self.periodo)
@@ -62,7 +45,7 @@ class ConsolidadoPermisosYExcelTest(base.BaseProyeccionTest):
         self.client.force_login(self.admin)
         self.assertEqual(self.client.get(reverse('proyecciones:consolidado')).status_code, 200)
 
-    def test_excel_trae_una_hoja_por_area_y_el_resumen(self):
+    def test_excel_trae_una_hoja_por_area(self):
         self.crear_linea(self.proy_urg, producto='Guantes')
         self.proy_urg.estado = EstadoProyeccion.ENVIADA
         self.proy_urg.save()
@@ -71,8 +54,14 @@ class ConsolidadoPermisosYExcelTest(base.BaseProyeccionTest):
         self.assertEqual(respuesta.status_code, 200)
         self.assertIn('spreadsheetml', respuesta['Content-Type'])
         libro = load_workbook(BytesIO(respuesta.content))
-        self.assertEqual(libro.sheetnames, ['Urgencias', NOMBRE_RESUMEN])
+        self.assertEqual(libro.sheetnames, ['Urgencias'])
         self.assertEqual(libro['Urgencias']['A7'].value, 'Guantes')
+
+    def test_excel_sin_areas_enviadas_trae_hoja_sin_datos(self):
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(reverse('proyecciones:descargar_consolidado', args=[2027]))
+        libro = load_workbook(BytesIO(respuesta.content))
+        self.assertEqual(libro.sheetnames, [NOMBRE_SIN_DATOS])
 
     def test_anio_que_no_existe(self):
         self.client.force_login(self.admin)

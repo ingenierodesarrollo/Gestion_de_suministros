@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.utils import timezone
 from datetime import date
 from django.urls import reverse
-from .consolidado import MESES_CORTOS, consolidado_por_area, consolidado_por_producto
+from .consolidado import MESES_CORTOS, consolidado_por_area
 from django.http import HttpResponse
 from .exportar import construir_excel
 from django.db import transaction
@@ -240,7 +240,7 @@ def bitacora(request):
 
 @rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def consolidado_vista(request):
-    """Consolidado de un año: cada área por separado y la suma por producto."""
+    """Consolidado de un año: cada área por separado y el costo general."""
     periodos = Periodo.objects.all()
     anio = request.GET.get('anio', '')
     periodo = get_object_or_404(Periodo, anio=anio) if anio.isdigit() else periodos.first()
@@ -249,7 +249,6 @@ def consolidado_vista(request):
         areas = consolidado_por_area(periodo)
         contexto.update({
             'areas': areas,
-            'productos': consolidado_por_producto(periodo),
             'costo_general': sum(a['costo_total'] for a in areas),
             'pendientes': periodo.proyecciones.filter(estado=EstadoProyeccion.BORRADOR).select_related('area'),
         })

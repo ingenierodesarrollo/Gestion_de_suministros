@@ -1,16 +1,16 @@
-"""Genera el Excel del consolidado: una hoja por área y un resumen por producto."""
+"""Genera el Excel del consolidado: una hoja por área."""
 from io import BytesIO
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-from .consolidado import MESES_CORTOS, consolidado_por_area, consolidado_por_producto
+from .consolidado import MESES_CORTOS, consolidado_por_area
 
 AZUL = '172554'
 AZUL_CLARO = 'DBEAFE'
 BORDE = Border(*(Side(style='thin', color='C3C8D4'),) * 4)
-NOMBRE_RESUMEN = 'Resumen por producto'
+NOMBRE_SIN_DATOS = 'Sin datos'
 FORMATO_DINERO = '#,##0.00'
 
 
@@ -84,34 +84,17 @@ def _hoja_area(wb, periodo, datos, usadas):
     ws.freeze_panes = 'E7'
 
 
-def _hoja_resumen(wb, periodo, productos):
-    ws = wb.create_sheet(NOMBRE_RESUMEN)
-    columnas = 18
-    _encabezado(ws, periodo, 'Resumen por producto (suma de todas las áreas enviadas y aprobadas)', columnas)
-    _titulos_columnas(ws, 6, ['Equipo / Producto / Servicio', 'Unidad', 'Áreas']
-                      + MESES_CORTOS + ['Total año', 'Autorizado', 'Costo proyectado'])
-    fila = 7
-    for g in productos:
-        _escribir_fila(ws, fila, [g['producto'], g['unidad'], g['areas']] + g['meses']
-                       + [g['total'], g['autorizado'], g['costo']], num_desde=4, dinero_en={18})
-        fila += 1
-    ws.cell(row=fila, column=1, value='Costo total').font = Font(bold=True)
-    total = ws.cell(row=fila, column=18, value=sum(g['costo'] for g in productos))
-    total.font = Font(bold=True, color=AZUL)
-    total.number_format = FORMATO_DINERO
-    total.fill = PatternFill('solid', fgColor=AZUL_CLARO)
-    _anchos(ws, {1: 32, 2: 14, 3: 28, 16: 10, 17: 11, 18: 16}, columnas)
-    ws.freeze_panes = 'D7'
-
-
 def construir_excel(periodo):
     """Devuelve los bytes del archivo .xlsx del consolidado del periodo."""
     wb = Workbook()
     wb.remove(wb.active)
-    usadas = {NOMBRE_RESUMEN.lower()}
+    usadas = set()
     for datos in consolidado_por_area(periodo):
         _hoja_area(wb, periodo, datos, usadas)
-    _hoja_resumen(wb, periodo, consolidado_por_producto(periodo))
+    if not wb.sheetnames:
+        # Un Excel necesita al menos una hoja.
+        ws = wb.create_sheet(NOMBRE_SIN_DATOS)
+        _encabezado(ws, periodo, 'Ninguna área ha enviado su proyección de este año.', 8)
     salida = BytesIO()
     wb.save(salida)
     return salida.getvalue()
