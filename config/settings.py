@@ -115,6 +115,10 @@ AXES_COOLOFF_TIME = timedelta(minutes=15)     # cuánto dura el bloqueo
 AXES_LOCKOUT_PARAMETERS = ['username']        # se bloquea al correo, no a la computadora
 AXES_RESET_ON_SUCCESS = True                  # un ingreso correcto reinicia la cuenta de fallos
 AXES_LOCKOUT_TEMPLATE = 'cuentas/bloqueado.html'
+# axes.W006: se bloquea por correo y no por computador a propósito (PCs compartidos en la clínica).
+# Revisar si el sistema se publica en internet.
+SILENCED_SYSTEM_CHECKS = ['axes.W006']
+
 
 # Cierre de sesión por inactividad: 30 minutos sin usar el sistema
 SESSION_COOKIE_AGE = 30 * 60
@@ -140,5 +144,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if 'test' in sys.argv:
     # Solo al correr las pruebas: un cifrado rápido. En el sistema real se sigue usando el seguro.
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
-
 
