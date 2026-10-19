@@ -144,4 +144,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if 'test' in sys.argv:
     # Solo al correr las pruebas: un cifrado rápido. En el sistema real se sigue usando el seguro.
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+    
+# Producción (en el servidor): una sola variable activa la seguridad extra.
+# En tu computador no se define y todo sigue igual.
+if os.environ.get('DJANGO_PRODUCCION') == 'True':
+    SECURE_SSL_REDIRECT = True        # manda todo a HTTPS
+    SESSION_COOKIE_SECURE = True      # la cookie de sesión solo viaja cifrada
+    CSRF_COOKIE_SECURE = True         # la cookie anti-formularios-falsos, igual
+    SECURE_HSTS_SECONDS = 3600        # el navegador recuerda "solo HTTPS" por 1 hora (se sube después)
+    
+    
+
 

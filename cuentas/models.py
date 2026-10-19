@@ -71,10 +71,22 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def is_active(self):
         return self.activo
 
-    # Solo un superusuario técnico entra al panel /admin/ de Django.
+    # Administradores y desarrolladores pueden entrar al panel /admin/ de Django.
     @property
     def is_staff(self):
-        return self.is_superuser
+        return self.is_superuser or self.rol in (Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
+
+    def has_perm(self, perm, obj=None):
+        """Da a los administradores de la aplicación permisos completos en /admin/."""
+        if self.is_active and self.rol in (Rol.ADMINISTRADOR, Rol.DESARROLLADOR):
+            return True
+        return super().has_perm(perm, obj)
+
+    def has_module_perms(self, app_label):
+        """Muestra todos los módulos del panel a administradores y desarrolladores."""
+        if self.is_active and self.rol in (Rol.ADMINISTRADOR, Rol.DESARROLLADOR):
+            return True
+        return super().has_module_perms(app_label)
 
     @property
     def es_coordinador(self):

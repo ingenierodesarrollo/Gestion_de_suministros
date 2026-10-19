@@ -49,8 +49,8 @@ class CuentasTest(TestCase):
         self.client.force_login(self.coord)
         self.assertEqual(self.client.get(reverse('proyecciones:revision')).status_code, 403)
 
-    def test_admin_de_django_solo_para_superusuario(self):
+    def test_administrador_y_desarrollador_entran_al_admin_de_django(self):
         self.client.force_login(self.admin)
-        self.assertEqual(self.client.get('/admin/').status_code, 302)  # lo manda al login del panel
+        self.assertEqual(self.client.get('/admin/').status_code, 200)
         self.client.force_login(self.dev)
         self.assertEqual(self.client.get('/admin/').status_code, 200)
