@@ -14,7 +14,7 @@
       <tbody>
         {% for f in filas %}
         <tr>
-          <td class="fecha">{{ f.fecha_hora|date:"d/m/Y H:i" }}</td>
+          <td class="fecha">{{ f.fecha_hora|date:"d/m/Y" }}<br>{{ f.fecha_hora|date:"H:i" }}</td>
           <td>{{ f.usuario }}</td>
           <td>{{ f.get_accion_display }}</td>
           <td>{{ f.objeto }}</td>

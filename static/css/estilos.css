@@ -161,8 +161,7 @@ a.boton:hover { background: #0f1a3d; }
 
 /* Bitácora: letra más pequeña, fecha en una sola línea y motivo más ancho */
 .tabla-bitacora th, .tabla-bitacora td { font-size: 0.85rem; padding: 0.5rem 0.6rem; }
-.tabla-bitacora .fecha { white-space: nowrap; }
-.tabla-bitacora .motivo { min-width: 12rem; }
+.tabla-bitacora .motivo { min-width: 9rem; }
 
 /* Barra superior en ventanas angostas (media pantalla, portátiles pequeños) */
 .barra nav a { white-space: nowrap; }
@@ -186,3 +185,9 @@ a.boton:hover { background: #0f1a3d; }
 .zona-archivo:hover { border-color: var(--azul); background: var(--azul-claro); }
 input[type="file"] { font-family: inherit; font-size: 0.9rem; }
 input[type="file"]::file-selector-button { padding: 0.45rem 0.9rem; margin-right: 0.75rem; border: 0; border-radius: 6px; background: var(--azul); color: #fff; font-family: inherit; cursor: pointer; }
+
+/* Botones Editar y Borrar en la misma fila, sin partirse, y del mismo tamaño */
+.tabla td:has(.boton-borrar) { white-space: nowrap; width: 1%; }
+.tabla td:has(.boton-borrar) .boton-tabla { min-width: 0; }
+.boton-borrar { padding: 0.25rem 0.7rem; line-height: 1.4; border-radius: 6px; font-family: inherit; vertical-align: middle; margin-left: 0.3rem; }
+.boton-borrar:hover { background: #fef2f2; }

@@ -83,7 +83,7 @@
       <p class="aviso error">No hay nada nuevo que agregar ni actualizar.</p>
     {% endif %}
 
-    <div class="acciones">
+    <div class="acciones separado">
       <a class="boton-tabla" href="{% url 'proyecciones:importar_excel' proyeccion.pk %}">Subir otro archivo</a>
       <a class="boton-tabla" href="{% url 'proyecciones:detalle' proyeccion.pk %}">Cancelar</a>
     </div>
