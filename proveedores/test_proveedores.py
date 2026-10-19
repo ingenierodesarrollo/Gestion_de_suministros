@@ -49,14 +49,14 @@ class ProveedorTests(TestCase):
 
 class TipoDocumentoTests(TestCase):
     def test_valores_por_defecto(self):
-        tipo = TipoDocumento.objects.create(nombre="RUT")
+        tipo = TipoDocumento.objects.create(nombre="Documento nuevo de prueba")
         self.assertTrue(tipo.vence)
         self.assertTrue(tipo.activo)
         self.assertIsNone(tipo.vigencia_dias)
         self.assertIsNone(tipo.requisito)
 
     def test_nombre_unico(self):
-        TipoDocumento.objects.create(nombre="RUT")
+        # "RUT" ya existe por la migración 0004: no se puede crear otro igual.
         with self.assertRaises(IntegrityError), transaction.atomic():
             TipoDocumento.objects.create(nombre="RUT")
 
@@ -64,8 +64,9 @@ class TipoDocumentoTests(TestCase):
 class DocumentoProveedorTests(TestCase):
     def setUp(self):
         self.proveedor = crear_proveedor()
-        self.rut = TipoDocumento.objects.create(nombre="RUT", vence=True)
-        self.portafolio = TipoDocumento.objects.create(nombre="Portafolio de servicios", vence=False)
+        # Los tipos de documento ya existen: los cargó la migración 0004.
+        self.rut = TipoDocumento.objects.create(nombre="Documento de prueba que vence", vence=True)
+        self.portafolio = TipoDocumento.objects.create(nombre="Documento de prueba que no vence", vence=False)
         self.hoy = date(2026, 10, 19)
 
     def documento(self, tipo, vencimiento=None, expedicion=None):
