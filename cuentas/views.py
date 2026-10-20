@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
 
@@ -8,6 +8,8 @@ from .forms import CambiarClaveForm
 
 @login_required
 def inicio(request):
+    if request.user.es_proveedor:
+        return redirect("portal:inicio")
     return render(request, "inicio.html")
 
 

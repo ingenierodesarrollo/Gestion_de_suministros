@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block titulo %}Portal de proveedores · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <h1>Portal de proveedores</h1>
+  {% for mensaje in messages %}
+    <p class="mensaje">{{ mensaje }}</p>
+  {% endfor %}
+  <div class="tarjeta">
+    <h2>{{ proveedor.razon_social }}</h2>
+    <p>NIT: {{ proveedor.nit }}</p>
+    <p>Categoría: {{ proveedor.categoria }}</p>
+    <p>Estado: <strong>{{ proveedor.get_estado_display }}</strong></p>
+    {% if proveedor.estado == "en_revision" %}
+      <p>La clínica está revisando sus datos y documentos.</p>
+    {% endif %}
+  </div>
+  <div class="tarjeta">
+    <h2>Mis documentos</h2>
+    <p>Muy pronto podrá subir aquí sus documentos en PDF.</p>
+  </div>
+{% endblock %}

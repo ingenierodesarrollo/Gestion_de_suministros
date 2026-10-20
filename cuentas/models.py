@@ -7,6 +7,7 @@ class Rol(models.TextChoices):
     COORDINADOR = 'coordinador', 'Coordinador de área'
     ADMINISTRADOR = 'administrador', 'Administrador'
     DESARROLLADOR = 'desarrollador', 'Desarrollador'
+    PROVEEDOR = 'proveedor' , 'Proveedor'
 
 
 class UsuarioManager(BaseUserManager):
@@ -46,6 +47,16 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     # La contraseña cifrada vive en el campo "password" heredado de AbstractBaseUser.
     
     debe_cambiar_clave = models.BooleanField('debe cambiar la clave', default=False)
+    
+        # Solo para usuarios proveedor: la empresa a la que pertenecen.
+    proveedor = models.ForeignKey(
+        'proveedores.Proveedor',
+        verbose_name='proveedor',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='usuarios',
+    )
 
     objects = UsuarioManager()
 
@@ -65,7 +76,10 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         super().clean()
         if self.rol == Rol.COORDINADOR and not self.area_id:
             raise ValidationError({'area': 'Un coordinador de área debe tener un área asignada.'})
-
+        
+        if self.rol == Rol.PROVEEDOR and not self.proveedor_id:
+            raise ValidationError('Un usuario proveedor debe estar ligado a un proveedor. Se crean desde el registro del portal.')
+        
     # Django pregunta por "is_active" para permitir o no el inicio de sesión.
     @property
     def is_active(self):
@@ -113,3 +127,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     @property
     def es_desarrollador(self):
         return self.rol == Rol.DESARROLLADOR
+    
+    @property
+    def es_proveedor(self):
+        return self.rol == Rol.PROVEEDOR

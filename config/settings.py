@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'proyecciones',
     'configuracion',
     "proveedores",
+    "portal", 
 ]
 
 MIDDLEWARE = [

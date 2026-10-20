@@ -6,6 +6,11 @@
     {% if user.es_coordinador %}
       <a href="{% url 'proyecciones:mi_proyeccion' %}">Mi proyección</a>
     {% endif %}
+
+    {% if user.es_proveedor %}
+      <a href="{% url 'portal:inicio' %}">Mi portal</a>
+    {% endif %}
+    
     {% if user.es_administrador or user.es_desarrollador %}
       <details class="menu-desplegable">
         <summary class="{% if request.resolver_match.app_name == 'proyecciones' %}activo{% endif %}">Proyecciones</summary>

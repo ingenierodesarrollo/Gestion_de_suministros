@@ -15,5 +15,6 @@
     <p>Contraseña<br>{{ form.password }}</p>
     <button type="submit">Ingresar</button>
   </form>
+  <p>¿Es proveedor y no tiene cuenta? <a href="{% url 'portal:registro' %}">Regístrese aquí</a></p>
 </div>
 {% endblock %}

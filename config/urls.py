@@ -14,4 +14,5 @@ urlpatterns = [
     path("proyecciones/", include("proyecciones.urls")),
     path("configuracion/", include("configuracion.urls")),
     path("proveedores/", include("proveedores.urls")),
-]
+    path("portal/", include("portal.urls")),
+]

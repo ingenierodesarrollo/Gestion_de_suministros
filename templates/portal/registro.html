@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registro de proveedores · Gestión de suministros{% endblock %}
+{% block clase_body %}centrado{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Registro de proveedores</h1>
+    <p>Cree la cuenta de su empresa para enviar sus documentos a la clínica.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="boton">Crear cuenta</button>
+    </form>
+    <p>¿Ya tiene cuenta? <a href="{% url 'login' %}">Inicie sesión</a></p>
+  </div>
+{% endblock %}
