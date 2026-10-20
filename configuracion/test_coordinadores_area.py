@@ -72,6 +72,23 @@ class CoordinadoresAreaTest(TestCase):
         for usuario in (self.admin, desarrollador, usuario_proveedor, inactivo):
             self.assertNotIn(usuario, opciones)
 
+    def test_sin_coordinadores_explica_como_crearlos(self):
+        respuesta = self.client.get(reverse('configuracion:area_nueva'))
+        self.assertContains(respuesta, 'Todavía no hay coordinadores activos.')
+        self.coordinador('coord@ejemplo.test', 'Coordinador Activo')
+        respuesta = self.client.get(reverse('configuracion:area_nueva'))
+        self.assertNotContains(respuesta, 'Todavía no hay coordinadores activos.')
+
+    def test_area_nueva_con_coordinador_de_otra_area(self):
+        coordinador = self.coordinador('coord@ejemplo.test', 'Coordinador Movido', self.urgencias)
+        respuesta = self.client.post(reverse('configuracion:area_nueva'), {
+            'nombre': 'Farmacia', 'codigo_area': 'FAR', 'activa': 'on', 'coordinadores': [coordinador.pk],
+        })
+        self.assertRedirects(respuesta, reverse('configuracion:areas'))
+        farmacia = Area.objects.get(codigo_area='FAR')
+        coordinador.refresh_from_db()
+        self.assertEqual(coordinador.area, farmacia)
+
     def test_indica_si_el_coordinador_esta_en_otra_area(self):
         coordinador = self.coordinador('coord@ejemplo.test', 'Coordinador Actual', self.urgencias)
         respuesta = self.client.get(reverse('configuracion:area_editar', args=[self.laboratorio.pk]))

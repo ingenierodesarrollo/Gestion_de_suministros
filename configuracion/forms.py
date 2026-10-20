@@ -33,6 +33,12 @@ class AreaForm(forms.ModelForm):
             rol=Rol.COORDINADOR, activo=True,
         ).select_related('area').order_by('nombre', 'correo')
         campo.area_actual = self.instance if self.instance.pk else None
+        # Sin coordinadores la lista sale vacía y parece un error: se explica qué hacer.
+        if not campo.queryset.exists():
+            campo.help_text = (
+                'Todavía no hay coordinadores activos. Créelos en Configuración → Usuarios '
+                'y luego vuelva aquí para asignarlos.'
+            )
         if self.instance.pk:
             self.initial['coordinadores'] = campo.queryset.filter(area=self.instance)
 
