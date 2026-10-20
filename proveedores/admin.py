@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Categoria, DocumentoProveedor, Peso, Proveedor, Requisito, TipoDocumento
+from .models import Categoria, DocumentoProveedor, Peso, Proveedor, Requisito, TipoDocumento, EnvioProveedor
 
 admin.site.register(Categoria)
 admin.site.register(Requisito)
@@ -17,3 +17,9 @@ class ProveedorAdmin(admin.ModelAdmin):
 @admin.register(DocumentoProveedor)
 class DocumentoProveedorAdmin(admin.ModelAdmin):
     list_display = ("proveedor", "tipo", "fecha_vencimiento")
+    
+@admin.register(EnvioProveedor)
+class EnvioProveedorAdmin(admin.ModelAdmin):
+    list_display = ("razon_social", "nit", "tipo", "estado", "origen", "recibido")
+    list_filter = ("estado", "origen")
+    readonly_fields = ("nombre_original", "recibido")

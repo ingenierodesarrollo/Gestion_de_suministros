@@ -154,6 +154,10 @@ if os.environ.get('DJANGO_PRODUCCION') == 'True':
     CSRF_COOKIE_SECURE = True         # la cookie anti-formularios-falsos, igual
     SECURE_HSTS_SECONDS = 3600        # el navegador recuerda "solo HTTPS" por 1 hora (se sube después)
     
+# Archivos que suben los proveedores. NO se publican en la web: se entregan por una vista que revisa permisos.
+MEDIA_ROOT = BASE_DIR / "archivos_privados"
+MEDIA_URL = "/archivos/"
+    
     
 
 

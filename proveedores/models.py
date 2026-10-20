@@ -1,9 +1,12 @@
 from datetime import timedelta
+from pathlib import Path
+from uuid import uuid4
+
 
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
+from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 
@@ -56,6 +59,31 @@ class Peso(models.Model):
         return f"{self.requisito.numero} / {self.categoria}: {self.valor}"
     
 DIAS_AVISO_VENCIMIENTO = 30
+
+TAMANO_MAXIMO_MB = 10
+
+
+def validar_pdf(archivo):
+    """Revisa que el archivo de verdad sea un PDF (no solo que termine en .pdf) y que no pese demasiado."""
+    if archivo.size > TAMANO_MAXIMO_MB * 1024 * 1024:
+        raise ValidationError(f"El archivo pesa más de {TAMANO_MAXIMO_MB} MB.")
+    archivo.seek(0)
+    inicio = archivo.read(5)
+    archivo.seek(0)
+    if inicio != b"%PDF-":
+        raise ValidationError("El archivo no es un PDF válido.")
+
+
+def ruta_envio(instancia, nombre):
+    """Guarda el archivo con un nombre al azar, en una carpeta por año y mes."""
+    return f"envios/{timezone.localdate():%Y/%m}/{uuid4().hex}.pdf"
+
+
+def ruta_documento(instancia, nombre):
+    return f"documentos/{timezone.localdate():%Y/%m}/{uuid4().hex}.pdf"
+
+
+VALIDADORES_PDF = [FileExtensionValidator(["pdf"], "Solo se aceptan archivos PDF."), validar_pdf]
 
 
 class Proveedor(models.Model):
@@ -115,12 +143,13 @@ class TipoDocumento(models.Model):
 
 
 class DocumentoProveedor(models.Model):
-    """Un documento de un proveedor. El archivo vive en Drive; aquí solo va el enlace."""
+    """Un documento de un proveedor. El archivo se guarda en el sistema o, si es antiguo, queda el enlace a Drive."""
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name="documentos")
     tipo = models.ForeignKey(TipoDocumento, on_delete=models.PROTECT, related_name="documentos")
     fecha_expedicion = models.DateField("fecha de expedición", null=True, blank=True)
     fecha_vencimiento = models.DateField("fecha de vencimiento", null=True, blank=True)
-    enlace_drive = models.URLField("enlace a Drive", max_length=500)
+    archivo = models.FileField(upload_to=ruta_documento, blank=True, validators=VALIDADORES_PDF)
+    enlace_drive = models.URLField("enlace a Drive", max_length=500, blank=True)
     observaciones = models.CharField(max_length=300, blank=True)
     registrado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
@@ -136,6 +165,10 @@ class DocumentoProveedor(models.Model):
         return f"{self.tipo} · {self.proveedor.razon_social}"
 
     def clean(self):
+        
+        if not self.archivo and not self.enlace_drive:
+            raise ValidationError("Sube el archivo PDF o pega el enlace a Drive.")
+        
         if self.tipo_id and self.tipo.vence and not self.fecha_vencimiento:
             raise ValidationError({"fecha_vencimiento": "Este tipo de documento vence: escribe la fecha de vencimiento."})
         if self.fecha_expedicion and self.fecha_vencimiento and self.fecha_vencimiento < self.fecha_expedicion:
@@ -151,3 +184,60 @@ class DocumentoProveedor(models.Model):
         if self.fecha_vencimiento <= hoy + timedelta(days=DIAS_AVISO_VENCIMIENTO):
             return "por_vencer"
         return "vigente"    
+    
+class EnvioProveedor(models.Model):
+    """Un documento que llegó de un proveedor y espera revisión: la "bandeja de envíos"."""
+    ORIGENES = [
+        ("portal", "Portal de proveedores"),
+        ("manual", "Registro manual"),
+    ]
+    ESTADOS = [
+        ("pendiente", "Pendiente"),
+        ("procesado", "Procesado"),
+        ("descartado", "Descartado"),
+    ]
+    origen = models.CharField(max_length=10, choices=ORIGENES, default="manual")
+    id_externo = models.CharField(
+        "id en el portal", max_length=50, unique=True, null=True, blank=True,
+        help_text="Número del envío en el portal. Evita traer dos veces el mismo envío.",
+    )
+    nit = models.CharField("NIT enviado", max_length=20)
+    razon_social = models.CharField("razón social enviada", max_length=200)
+    tipo = models.ForeignKey(TipoDocumento, on_delete=models.PROTECT, related_name="envios")
+    archivo = models.FileField(upload_to=ruta_envio, validators=VALIDADORES_PDF)
+    nombre_original = models.CharField("nombre original del archivo", max_length=255, blank=True)
+    recibido = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=10, choices=ESTADOS, default="pendiente")
+    proveedor = models.ForeignKey(
+        Proveedor, on_delete=models.SET_NULL, null=True, blank=True, related_name="envios",
+    )
+    documento = models.OneToOneField(
+        DocumentoProveedor, on_delete=models.SET_NULL, null=True, blank=True, related_name="envio",
+    )
+    revisado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+    )
+    fecha_revision = models.DateTimeField("fecha de revisión", null=True, blank=True)
+    motivo_descarte = models.CharField("motivo del descarte", max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["-recibido"]
+        verbose_name = "envío de proveedor"
+        verbose_name_plural = "envíos de proveedores"
+
+    def __str__(self):
+        return f"{self.tipo} · {self.razon_social} ({self.get_estado_display()})"
+
+    def clean(self):
+        if self.estado == "descartado" and not self.motivo_descarte.strip():
+            raise ValidationError({"motivo_descarte": "Escribe por qué se descarta el envío."})
+
+    def save(self, *args, **kwargs):
+        # Antes de guardar, el archivo todavía tiene el nombre con que lo subieron: lo anotamos.
+        if self.archivo and not self.nombre_original:
+            self.nombre_original = Path(self.archivo.name).name
+        super().save(*args, **kwargs)
+
+    def proveedor_sugerido(self):
+        """El proveedor que ya tiene ese NIT, si existe. Ayuda a la coordinadora a vincularlo."""
+        return Proveedor.objects.filter(nit=self.nit.strip()).first()
