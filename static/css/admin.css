@@ -20,3 +20,13 @@
     --delete-button-bg: #991b1b;
     --delete-button-hover-bg: #7f1d1d;
 }
+/* Nota al inicio del panel */
+.nota-admin {
+    background: #dbeafe;
+    color: #172554;
+    border-left: 4px solid #172554;
+    padding: 10px 14px;
+    border-radius: 4px;
+    max-width: 60rem;
+    font-size: 0.95rem;
+}

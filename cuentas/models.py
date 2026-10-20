@@ -71,21 +71,35 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def is_active(self):
         return self.activo
 
-    # Administradores y desarrolladores pueden entrar al panel /admin/ de Django.
+    # Entran al panel /admin/ los superusuarios, los administradores y los desarrolladores.
     @property
     def is_staff(self):
         return self.is_superuser or self.rol in (Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 
+    # Tablas de historial: los administradores las ven en /admin/, pero no las agregan, cambian ni borran.
+    MODELOS_DE_HISTORIAL = ('bitacora', 'ajuste')
+    # Partes técnicas del panel que solo ven los desarrolladores (axes = bloqueos por intentos fallidos).
+    APPS_TECNICAS = ('axes',)
+
     def has_perm(self, perm, obj=None):
-        """Da a los administradores de la aplicación permisos completos en /admin/."""
-        if self.is_active and self.rol in (Rol.ADMINISTRADOR, Rol.DESARROLLADOR):
-            return True
+        """Desarrolladores: todo. Administradores: todo, salvo tocar el historial y lo técnico. Coordinadores: nada."""
+        if self.is_active and not self.is_superuser:
+            if self.rol == Rol.DESARROLLADOR:
+                return True
+            if self.rol == Rol.ADMINISTRADOR:
+                app, _, codigo = perm.partition('.')
+                accion, _, modelo = codigo.partition('_')
+                if app in self.APPS_TECNICAS:
+                    return False
+                return not (accion in ('add', 'change', 'delete') and modelo in self.MODELOS_DE_HISTORIAL)
         return super().has_perm(perm, obj)
 
     def has_module_perms(self, app_label):
-        """Muestra todos los módulos del panel a administradores y desarrolladores."""
-        if self.is_active and self.rol in (Rol.ADMINISTRADOR, Rol.DESARROLLADOR):
-            return True
+        if self.is_active and not self.is_superuser:
+            if self.rol == Rol.DESARROLLADOR:
+                return True
+            if self.rol == Rol.ADMINISTRADOR:
+                return app_label not in self.APPS_TECNICAS
         return super().has_module_perms(app_label)
 
     @property

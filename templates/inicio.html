@@ -27,6 +27,9 @@
         <a class="boton" href="{% url 'configuracion:usuarios' %}">Usuarios</a>
         <a class="boton" href="{% url 'proveedores:lista' %}">Proveedores</a>
       {% endif %}
+      {% if user.is_staff %}
+        <a class="boton boton-avanzado" href="{% url 'admin:index' %}">Opciones avanzadas</a>
+      {% endif %}
     </div>
   </div>
 {% endblock %}

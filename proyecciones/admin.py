@@ -45,9 +45,11 @@ class SoloLectura(admin.ModelAdmin):
 @admin.register(Bitacora)
 class BitacoraAdmin(SoloLectura):
     list_display = ('fecha_hora', 'usuario', 'accion', 'tabla', 'registro_id', 'campo', 'valor_anterior', 'valor_nuevo')
-    list_filter = ('accion',)
+    list_filter = ('accion', 'tabla')
+    search_fields = ('usuario__nombre', 'campo', 'valor_anterior', 'valor_nuevo')
+    date_hierarchy = 'fecha_hora'
 
 
 @admin.register(Ajuste)
 class AjusteAdmin(SoloLectura):
-    list_display = ('fecha', 'linea', 'campo', 'valor_aprobado', 'valor_nuevo', 'hecho_por')
+    list_display = ('fecha', 'linea', 'campo', 'valor_aprobado', 'valor_nuevo', 'hecho_por')

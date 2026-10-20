@@ -7,15 +7,28 @@
       <a href="{% url 'proyecciones:mi_proyeccion' %}">Mi proyección</a>
     {% endif %}
     {% if user.es_administrador or user.es_desarrollador %}
-      <a href="{% url 'proyecciones:revision' %}" class="{% if request.resolver_match.view_name == 'proyecciones:revision' %}activo{% endif %}">Revisión</a>
-      <a href="{% url 'proyecciones:consolidado' %}" class="{% if request.resolver_match.view_name == 'proyecciones:consolidado' %}activo{% endif %}">Consolidado</a>
-      <a href="{% url 'proyecciones:abrir_periodo' %}" class="{% if request.resolver_match.view_name == 'proyecciones:abrir_periodo' %}activo{% endif %}">Abrir periodo</a>
-      <a href="{% url 'proyecciones:bitacora' %}" class="{% if request.resolver_match.view_name == 'proyecciones:bitacora' %}activo{% endif %}">Bitácora</a>
-      <a href="{% url 'configuracion:areas' %}" class="{% if request.resolver_match.view_name == 'configuracion:areas' %}activo{% endif %}">Áreas</a>
-      <a href="{% url 'configuracion:unidades' %}" class="{% if request.resolver_match.view_name == 'configuracion:unidades' %}activo{% endif %}">Unidades</a>
-      <a href="{% url 'configuracion:productos' %}" class="{% if request.resolver_match.view_name == 'configuracion:productos' %}activo{% endif %}">Productos sugeridos</a>
-      <a href="{% url 'configuracion:usuarios' %}" class="{% if request.resolver_match.view_name == 'configuracion:usuarios' %}activo{% endif %}">Usuarios</a>
+      <details class="menu-desplegable">
+        <summary class="{% if request.resolver_match.app_name == 'proyecciones' %}activo{% endif %}">Proyecciones</summary>
+        <div class="menu-opciones">
+          <a href="{% url 'proyecciones:revision' %}" class="{% if request.resolver_match.view_name == 'proyecciones:revision' %}activo{% endif %}">Revisión</a>
+          <a href="{% url 'proyecciones:consolidado' %}" class="{% if request.resolver_match.view_name == 'proyecciones:consolidado' %}activo{% endif %}">Consolidado</a>
+          <a href="{% url 'proyecciones:abrir_periodo' %}" class="{% if request.resolver_match.view_name == 'proyecciones:abrir_periodo' %}activo{% endif %}">Abrir periodo</a>
+          <a href="{% url 'proyecciones:bitacora' %}" class="{% if request.resolver_match.view_name == 'proyecciones:bitacora' %}activo{% endif %}">Bitácora</a>
+        </div>
+      </details>
+      <details class="menu-desplegable">
+        <summary class="{% if request.resolver_match.app_name == 'configuracion' %}activo{% endif %}">Configuración</summary>
+        <div class="menu-opciones">
+          <a href="{% url 'configuracion:areas' %}" class="{% if request.resolver_match.view_name == 'configuracion:areas' %}activo{% endif %}">Áreas</a>
+          <a href="{% url 'configuracion:unidades' %}" class="{% if request.resolver_match.view_name == 'configuracion:unidades' %}activo{% endif %}">Unidades</a>
+          <a href="{% url 'configuracion:productos' %}" class="{% if request.resolver_match.view_name == 'configuracion:productos' %}activo{% endif %}">Productos sugeridos</a>
+          <a href="{% url 'configuracion:usuarios' %}" class="{% if request.resolver_match.view_name == 'configuracion:usuarios' %}activo{% endif %}">Usuarios</a>
+        </div>
+      </details>
       <a href="{% url 'proveedores:lista' %}" class="{% if request.resolver_match.app_name == 'proveedores' %}activo{% endif %}">Proveedores</a>
+    {% endif %}
+    {% if user.is_staff %}
+      <a href="{% url 'admin:index' %}" class="opciones-avanzadas">Opciones avanzadas</a>
     {% endif %}
   </nav>
   {% endif %}
@@ -28,4 +41,12 @@
     </form>
   </div>
 </header>
+<script>
+  // Cierra los desplegables de la barra al abrir otro o al hacer clic fuera de ellos.
+  document.addEventListener('click', function (evento) {
+    document.querySelectorAll('.barra details[open]').forEach(function (menu) {
+      if (!menu.contains(evento.target)) menu.removeAttribute('open');
+    });
+  });
+</script>
 {% endif %}

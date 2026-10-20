@@ -201,3 +201,24 @@ input[type="file"]::file-selector-button { padding: 0.45rem 0.9rem; margin-right
 .vig-sin_vencimiento { background: #e5e7eb; color: #374151; }
 .vig-por_vencer { background: #fff; color: #991b1b; border: 1px solid #991b1b; }
 .vig-vencido { background: #991b1b; color: #fff; }
+
+/* Desplegables de la barra (Proyecciones y Configuración) */
+.barra details { position: relative; }
+.barra summary { list-style: none; cursor: pointer; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; user-select: none; }
+.barra summary::-webkit-details-marker { display: none; }
+.barra summary::after { content: " ▾"; font-size: 0.8em; }
+.barra summary:hover, .barra details[open] > summary { background: #0f1a3d; }
+.barra summary.activo { background: var(--azul-claro); color: var(--azul); font-weight: 600; }
+.menu-opciones { position: absolute; top: calc(100% + 4px); left: 0; z-index: 20; min-width: 13rem; background: #fff; border-radius: 6px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); padding: 0.3rem; display: flex; flex-direction: column; }
+.barra .menu-opciones a { color: var(--azul); padding: 0.45rem 0.8rem; }
+.barra .menu-opciones a:hover { background: var(--azul-claro); }
+.barra .menu-opciones a.activo { background: var(--azul-claro); font-weight: 600; }
+.barra nav a.opciones-avanzadas { margin-left: auto; border: 1px solid rgba(255, 255, 255, 0.5); font-size: 0.85rem; }
+a.boton.boton-avanzado { background: #fff; color: var(--azul); border: 1px solid var(--azul); }
+a.boton.boton-avanzado:hover { background: var(--azul-claro); }
+@media (max-width: 1100px) {
+  /* Con los desplegables ya caben los botones: sin barra de desplazamiento, para que el menú no quede cortado */
+  .barra nav { flex-wrap: wrap; overflow: visible; }
+  .barra summary { padding: 0.35rem 0.7rem; font-size: 0.9rem; }
+}
+.barra details[open] > summary.activo, .barra summary.activo:hover { background: var(--azul-claro); color: var(--azul); }
