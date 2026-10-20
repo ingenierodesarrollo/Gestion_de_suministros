@@ -35,7 +35,7 @@
           <td>{{ d.fecha_expedicion|date:"d/m/Y"|default:"—" }}</td>
           <td>{{ d.fecha_vencimiento|date:"d/m/Y"|default:"—" }}</td>
           <td><span class="etiqueta vig-{{ e }}">{% if e == "vencido" %}Vencido{% elif e == "por_vencer" %}Por vencer{% elif e == "vigente" %}Vigente{% else %}No vence{% endif %}</span></td>
-          <td><a class="boton-tabla" href="{{ d.enlace_drive }}" target="_blank" rel="noopener noreferrer">Ver en Drive</a></td>
+          <td>{% if d.archivo %}<a class="boton-tabla" href="{% url 'proveedores:documento_archivo' d.pk %}" target="_blank" rel="noopener noreferrer">Ver PDF</a>{% elif d.enlace_drive %}<a class="boton-tabla" href="{{ d.enlace_drive }}" target="_blank" rel="noopener noreferrer">Ver en Drive</a>{% endif %}</td>
         </tr>
         {% endwith %}
         {% empty %}
@@ -54,7 +54,7 @@
         <tr>
           <td>{{ d.tipo.nombre }}</td>
           <td>{{ d.fecha_vencimiento|date:"d/m/Y"|default:"—" }}</td>
-          <td><a class="boton-tabla" href="{{ d.enlace_drive }}" target="_blank" rel="noopener noreferrer">Ver en Drive</a></td>
+          <td>{% if d.archivo %}<a class="boton-tabla" href="{% url 'proveedores:documento_archivo' d.pk %}" target="_blank" rel="noopener noreferrer">Ver PDF</a>{% elif d.enlace_drive %}<a class="boton-tabla" href="{{ d.enlace_drive }}" target="_blank" rel="noopener noreferrer">Ver en Drive</a>{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>

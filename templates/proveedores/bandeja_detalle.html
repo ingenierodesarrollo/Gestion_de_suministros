@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block titulo %}Envío de {{ envio.razon_social }} · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <p><a href="{% url 'proveedores:bandeja' %}">← Volver a la bandeja</a></p>
+    <h1>{{ envio.tipo }}</h1>
+    {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
+    <div class="resumen-tarjetas">
+      <div class="dato"><span>Enviado por</span><strong>{{ envio.razon_social }}</strong></div>
+      <div class="dato"><span>NIT enviado</span><strong>{{ envio.nit }}</strong></div>
+      <div class="dato"><span>Recibido</span><strong>{{ envio.recibido|date:"d/m/Y H:i" }}</strong></div>
+      <div class="dato"><span>Estado</span><strong><span class="etiqueta envio-{{ envio.estado }}">{{ envio.get_estado_display }}</span></strong></div>
+    </div>
+    <p class="acciones">
+      <a class="boton-tabla" href="{% url 'proveedores:envio_archivo' envio.pk %}" target="_blank" rel="noopener noreferrer">Ver el PDF ({{ envio.nombre_original }})</a>
+    </p>
+    {% if sugerido %}
+      <p class="resumen">Proveedor en el sistema con ese NIT: <a href="{% url 'proveedores:detalle' sugerido.pk %}">{{ sugerido.razon_social }}</a> ({{ sugerido.get_estado_display }}).</p>
+    {% else %}
+      <p class="resumen">No hay ningún proveedor con ese NIT. Si es nuevo, créelo primero en <a href="{% url 'proveedores:nuevo' %}">Nuevo proveedor</a> y vuelva a esta pantalla.</p>
+    {% endif %}
+
+    {% if envio.estado == "pendiente" %}
+      <h2>Aceptar y registrar el documento</h2>
+      <form method="post" action="{% url 'proveedores:envio_procesar' envio.pk %}" novalidate>
+        {% csrf_token %}
+        {{ form_procesar.as_p }}
+        <button type="submit" class="boton">Registrar en la ficha</button>
+      </form>
+
+      <h2>Descartar</h2>
+      <form method="post" action="{% url 'proveedores:envio_descartar' envio.pk %}" novalidate>
+        {% csrf_token %}
+        {{ form_descartar.as_p }}
+        <button type="submit" class="boton-borrar">Descartar envío</button>
+      </form>
+    {% else %}
+      <h2>Resultado de la revisión</h2>
+      <p>Revisado por {{ envio.revisado_por.nombre|default:"—" }} el {{ envio.fecha_revision|date:"d/m/Y H:i"|default:"—" }}.</p>
+      {% if envio.estado == "procesado" and envio.documento %}
+        <p>Quedó registrado en la ficha de <a href="{% url 'proveedores:detalle' envio.documento.proveedor.pk %}">{{ envio.documento.proveedor.razon_social }}</a>{% if envio.documento.fecha_vencimiento %}, vence el {{ envio.documento.fecha_vencimiento|date:"d/m/Y" }}{% endif %}.</p>
+      {% endif %}
+      {% if envio.estado == "descartado" %}
+        <p>Motivo: {{ envio.motivo_descarte }}</p>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endblock %}

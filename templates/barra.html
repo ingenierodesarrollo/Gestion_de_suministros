@@ -31,6 +31,7 @@
         </div>
       </details>
       <a href="{% url 'proveedores:lista' %}" class="{% if request.resolver_match.app_name == 'proveedores' %}activo{% endif %}">Proveedores</a>
+      <a href="{% url 'proveedores:bandeja' %}" class="{% if request.resolver_match.view_name == 'proveedores:bandeja' or request.resolver_match.view_name == 'proveedores:bandeja_detalle' %}activo{% endif %}">Bandeja de envíos</a>
     {% endif %}
     {% if user.is_staff %}
       <a href="{% url 'admin:index' %}" class="opciones-avanzadas">Opciones avanzadas</a>

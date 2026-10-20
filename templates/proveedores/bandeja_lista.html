@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block titulo %}Bandeja de envíos · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Bandeja de envíos</h1>
+    {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
+    <p class="resumen">{{ pendientes }} envío{{ pendientes|pluralize }} pendiente{{ pendientes|pluralize }} de revisar.</p>
+    <form method="get" class="filtros">
+      <select name="estado" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        {% for valor, nombre in estados %}
+          <option value="{{ valor }}" {% if valor == estado %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit" class="boton-chico">Filtrar</button></noscript>
+    </form>
+    <table class="tabla">
+      <thead><tr><th>Recibido</th><th>Proveedor</th><th>NIT</th><th>Documento</th><th>Origen</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        {% for e in envios %}
+        <tr>
+          <td>{{ e.recibido|date:"d/m/Y H:i" }}</td>
+          <td>{{ e.razon_social }}</td>
+          <td>{{ e.nit }}</td>
+          <td>{{ e.tipo }}</td>
+          <td>{{ e.get_origen_display }}</td>
+          <td><span class="etiqueta envio-{{ e.estado }}">{{ e.get_estado_display }}</span></td>
+          <td><a class="boton-tabla" href="{% url 'proveedores:bandeja_detalle' e.pk %}">{% if e.estado == "pendiente" %}Revisar{% else %}Ver{% endif %}</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No hay envíos en esta lista.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

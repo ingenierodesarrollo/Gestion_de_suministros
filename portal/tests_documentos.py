@@ -80,7 +80,7 @@ class SubirDocumentoTest(TestCase):
         self.subir()
         self.assertFalse(EnvioProveedor.objects.exists())
         respuesta = self.client.get(reverse("portal:inicio"))
-        self.assertNotContains(respuesta, f'&lt;option value="{self.rut.pk}"')
+        self.assertNotContains(respuesta, f'<option value="{self.rut.pk}"')
 
     def test_ve_la_lista_de_sus_envios_con_su_estado(self):
         self.subir()
