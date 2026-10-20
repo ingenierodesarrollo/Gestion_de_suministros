@@ -222,3 +222,8 @@ a.boton.boton-avanzado:hover { background: var(--azul-claro); }
   .barra summary { padding: 0.35rem 0.7rem; font-size: 0.9rem; }
 }
 .barra details[open] > summary.activo, .barra summary.activo:hover { background: var(--azul-claro); color: var(--azul); }
+
+/* Estado de los envíos de proveedores */
+.envio-pendiente { background: #e5e7eb; color: #374151; }
+.envio-procesado { background: var(--azul); color: #fff; }
+.envio-descartado { background: #991b1b; color: #fff; }

@@ -85,6 +85,15 @@ def ruta_documento(instancia, nombre):
 
 VALIDADORES_PDF = [FileExtensionValidator(["pdf"], "Solo se aceptan archivos PDF."), validar_pdf]
 
+def limpiar_nit(nit):
+    """Quita espacios y puntos: ' 900.123.456-7 ' queda '900123456-7'."""
+    return nit.replace(".", "").replace(" ", "").strip()
+
+
+def nit_base(nit):
+    """El NIT sin el dígito de verificación: '900123456-7' y '900123456' dan '900123456'."""
+    return limpiar_nit(nit).split("-")[0]
+
 
 class Proveedor(models.Model):
     """La ficha del proveedor. El NIT es la llave: no puede repetirse."""
@@ -117,6 +126,19 @@ class Proveedor(models.Model):
 
     def __str__(self):
         return f"{self.razon_social} ({self.nit})"
+    
+    @classmethod
+    def con_mismo_nit(cls, nit):
+        """Los proveedores con ese NIT, lo escriban con o sin dígito de verificación."""
+        base = nit_base(nit)
+        if not base:
+            return cls.objects.none()
+        return cls.objects.filter(models.Q(nit=base) | models.Q(nit__startswith=f"{base}-"))
+
+    def clean(self):
+        # El NIT idéntico ya lo revisa unique=True; aquí se atrapa 900111222 contra 900111222-3.
+        if self.nit and Proveedor.con_mismo_nit(self.nit).exclude(pk=self.pk).exclude(nit=self.nit).exists():
+            raise ValidationError({"nit": "Ya hay un proveedor con ese NIT (con o sin dígito de verificación)."})
 
 
 class TipoDocumento(models.Model):
@@ -239,5 +261,5 @@ class EnvioProveedor(models.Model):
         super().save(*args, **kwargs)
 
     def proveedor_sugerido(self):
-        """El proveedor que ya tiene ese NIT, si existe. Ayuda a la coordinadora a vincularlo."""
-        return Proveedor.objects.filter(nit=self.nit.strip()).first()
+        """El proveedor que ya tiene ese NIT (con o sin dígito de verificación), si existe."""
+        return Proveedor.con_mismo_nit(self.nit).first()

@@ -5,19 +5,47 @@
 {% block contenido %}
   <h1>Portal de proveedores</h1>
   {% for mensaje in messages %}
-    <p class="mensaje">{{ mensaje }}</p>
+    <p class="aviso {{ mensaje.tags }}">{{ mensaje }}</p>
   {% endfor %}
   <div class="tarjeta">
     <h2>{{ proveedor.razon_social }}</h2>
     <p>NIT: {{ proveedor.nit }}</p>
     <p>Categoría: {{ proveedor.categoria }}</p>
-    <p>Estado: <strong>{{ proveedor.get_estado_display }}</strong></p>
+    <p>Estado: <span class="etiqueta estado-{{ proveedor.estado }}">{{ proveedor.get_estado_display }}</span></p>
     {% if proveedor.estado == "en_revision" %}
       <p>La clínica está revisando sus datos y documentos.</p>
     {% endif %}
   </div>
+
   <div class="tarjeta">
-    <h2>Mis documentos</h2>
-    <p>Muy pronto podrá subir aquí sus documentos en PDF.</p>
+    <h2>Enviar un documento</h2>
+    <p class="ayuda">Suba un archivo PDF por cada documento. Si un documento cambia (por ejemplo, un certificado nuevo), envíelo otra vez.</p>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="boton">Enviar documento</button>
+    </form>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Documentos enviados</h2>
+    <table class="tabla">
+      <thead><tr><th>Fecha</th><th>Documento</th><th>Archivo</th><th>Estado</th></tr></thead>
+      <tbody>
+        {% for envio in envios %}
+        <tr>
+          <td>{{ envio.recibido|date:"d/m/Y H:i" }}</td>
+          <td>{{ envio.tipo }}</td>
+          <td>{{ envio.nombre_original }}</td>
+          <td>
+            <span class="etiqueta envio-{{ envio.estado }}">{% if envio.estado == "pendiente" %}En revisión{% elif envio.estado == "procesado" %}Aceptado{% else %}Rechazado{% endif %}</span>
+            {% if envio.estado == "descartado" %}<br><small>Motivo: {{ envio.motivo_descarte }}</small>{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Todavía no ha enviado documentos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endblock %}

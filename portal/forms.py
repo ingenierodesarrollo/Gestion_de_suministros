@@ -1,31 +1,43 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import transaction
 
 from cuentas.models import Rol, Usuario
-from proveedores.models import Categoria, Proveedor
+from proveedores.models import Categoria, EnvioProveedor, Proveedor, TipoDocumento, limpiar_nit
+
+validar_formato_nit = RegexValidator(
+    r"^\d{6,12}(-\d)?$",
+    "Escriba el NIT solo con números y, si lo desea, el dígito de verificación. Ejemplo: 900123456-7",
+)
 
 
 class RegistroProveedorForm(forms.Form):
     """El proveedor se registra solo: se crean su ficha (en revisión) y su usuario."""
     nit = forms.CharField(
-        label="NIT", max_length=20,
-        validators=Proveedor._meta.get_field("nit").validators,
-        help_text="Solo números y, si quieres, el dígito de verificación: 900123456-7",
+        label="NIT", max_length=25,
+        help_text="Solo números y, si lo desea, el dígito de verificación. Ejemplo: 900123456-7",
     )
     razon_social = forms.CharField(label="Razón social", max_length=200)
     tipo_persona = forms.ChoiceField(label="Tipo de persona", choices=Proveedor.TIPOS_PERSONA)
-    categoria = forms.ModelChoiceField(label="¿Qué le ofrece a la clínica?", queryset=Categoria.objects.all())
+    categoria = forms.ModelChoiceField(
+        label="¿Qué le ofrece a la clínica?",
+        queryset=Categoria.objects.filter(activa=True),
+        empty_label="Seleccione una opción",
+    )
     contacto_nombre = forms.CharField(label="Nombre de la persona de contacto", max_length=120)
-    correo = forms.EmailField(label="Correo (con este correo inicias sesión)")
+    correo = forms.EmailField(label="Correo (con este correo iniciará sesión)")
     contacto_telefono = forms.CharField(label="Teléfono", max_length=30, required=False)
     clave1 = forms.CharField(label="Clave", widget=forms.PasswordInput)
-    clave2 = forms.CharField(label="Repite la clave", widget=forms.PasswordInput)
+    clave2 = forms.CharField(label="Repita la clave", widget=forms.PasswordInput)
 
     def clean_nit(self):
-        nit = self.cleaned_data["nit"].strip()
-        if Proveedor.objects.filter(nit=nit).exists():
+        # Acepta "900.123.456-7" o "900 123 456-7" y lo guarda como "900123456-7".
+        nit = limpiar_nit(self.cleaned_data["nit"])
+        validar_formato_nit(nit)
+        # 900123456 y 900123456-7 son la misma empresa.
+        if Proveedor.con_mismo_nit(nit).exists():
             raise ValidationError("Ya hay un proveedor registrado con ese NIT. Si es su empresa, comuníquese con la clínica.")
         return nit
 
@@ -67,3 +79,18 @@ class RegistroProveedorForm(forms.Form):
             datos["correo"], datos["contacto_nombre"], datos["clave1"],
             rol=Rol.PROVEEDOR, proveedor=proveedor,
         )
+
+
+class EnvioPortalForm(forms.ModelForm):
+    """El proveedor elige qué documento es y sube el PDF. El resto lo llena el sistema."""
+
+    class Meta:
+        model = EnvioProveedor
+        fields = ["tipo", "archivo"]
+        labels = {"tipo": "¿Qué documento es?", "archivo": "Archivo PDF (máximo 10 MB)"}
+        widgets = {"archivo": forms.ClearableFileInput(attrs={"accept": "application/pdf,.pdf"})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["tipo"].queryset = TipoDocumento.objects.filter(activo=True)
+        self.fields["tipo"].empty_label = "Seleccione el tipo de documento"

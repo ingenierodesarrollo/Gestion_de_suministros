@@ -24,7 +24,9 @@ class ProveedorTests(TestCase):
     def test_nit_valido_con_y_sin_digito_de_verificacion(self):
         for nit in ["900111222", "900111222-3"]:
             with self.subTest(nit=nit):
-                crear_proveedor(nit=nit).full_clean()
+                proveedor = crear_proveedor(nit=nit)
+                proveedor.full_clean()
+                proveedor.delete()
 
     def test_nit_invalido(self):
         for nit in ["ABC123", "9001-11222", "900 111 222", "123", "900111222-33"]:
