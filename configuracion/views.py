@@ -1,4 +1,6 @@
 from django.contrib import messages
+from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 
 
@@ -17,7 +19,13 @@ from django.contrib.auth.forms import SetPasswordForm
 
 @rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
 def areas_lista(request):
-    return render(request, 'configuracion/areas_lista.html', {'areas': Area.objects.all()})
+    coordinadores = Usuario.objects.filter(
+        rol=Rol.COORDINADOR, activo=True,
+    ).order_by('nombre', 'correo')
+    areas = Area.objects.prefetch_related(
+        Prefetch('usuarios', queryset=coordinadores, to_attr='coordinadores_activos')
+    )
+    return render(request, 'configuracion/areas_lista.html', {'areas': areas})
 
 
 @rol_requerido(Rol.ADMINISTRADOR, Rol.DESARROLLADOR)
@@ -26,7 +34,9 @@ def area_guardar(request, pk=None):
     area = get_object_or_404(Area, pk=pk) if pk else None
     form = AreaForm(request.POST or None, instance=area)
     if request.method == 'POST' and form.is_valid():
-        form.save()
+        with transaction.atomic():
+            area = form.save()
+            form.cleaned_data['coordinadores'].update(area=area)
         messages.success(request, 'Área guardada.')
         return redirect('configuracion:areas')
     return render(request, 'configuracion/area_form.html', {'form': form, 'area': area})
@@ -140,5 +150,4 @@ def usuario_clave(request, pk):
         return redirect('configuracion:usuarios')
     return render(request, 'configuracion/form_simple.html', {
         'form': form, 'titulo': f'Clave nueva para {usuario.nombre}', 'volver': 'configuracion:usuarios'})
-    
     

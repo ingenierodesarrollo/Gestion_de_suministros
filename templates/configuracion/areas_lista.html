@@ -8,12 +8,13 @@
     {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
     <p><a class="boton-tabla" href="{% url 'configuracion:area_nueva' %}">Nueva área</a></p>
     <table class="tabla">
-      <thead><tr><th>Código</th><th>Nombre</th><th>Estado</th><th></th></tr></thead>
+      <thead><tr><th>Código</th><th>Nombre</th><th>Coordinadores</th><th>Estado</th><th></th></tr></thead>
       <tbody>
         {% for a in areas %}
         <tr>
           <td>{{ a.codigo_area }}</td>
           <td>{{ a.nombre }}</td>
+          <td>{% for coordinador in a.coordinadores_activos %}{{ coordinador.nombre }}{% if not forloop.last %}, {% endif %}{% empty %}Sin coordinador{% endfor %}</td>
           <td>{% if a.activa %}Activa{% else %}Desactivada{% endif %}</td>
           <td>
             <a class="boton-tabla" href="{% url 'configuracion:area_editar' a.pk %}">Editar</a>
@@ -24,7 +25,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="4">No hay áreas.</td></tr>
+        <tr><td colspan="5">No hay áreas.</td></tr>
         {% endfor %}
       </tbody>
     </table>
