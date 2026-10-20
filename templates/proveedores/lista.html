@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block titulo %}Proveedores · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>Proveedores</h1>
+    {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
+    <form method="get" class="acciones">
+      <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre o NIT">
+      <select name="estado">
+        <option value="">Todos los estados</option>
+        {% for valor, nombre in estados %}
+          <option value="{{ valor }}" {% if valor == estado %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="boton-tabla">Buscar</button>
+      <a class="boton-tabla" href="{% url 'proveedores:nuevo' %}">Nuevo proveedor</a>
+    </form>
+    <table class="tabla">
+      <thead><tr><th>NIT</th><th>Razón social</th><th>Categoría</th><th>Estado</th><th>Documentos</th><th></th></tr></thead>
+      <tbody>
+        {% for f in filas %}
+        <tr>
+          <td>{{ f.proveedor.nit }}</td>
+          <td>{{ f.proveedor.razon_social }}</td>
+          <td>{{ f.proveedor.categoria.nombre }}</td>
+          <td><span class="etiqueta estado-{{ f.proveedor.estado }}">{{ f.proveedor.get_estado_display }}</span></td>
+          <td>
+            {% if f.resumen.vencido %}<span class="etiqueta vig-vencido">{{ f.resumen.vencido }} vencido{{ f.resumen.vencido|pluralize }}</span>{% endif %}
+            {% if f.resumen.por_vencer %}<span class="etiqueta vig-por_vencer">{{ f.resumen.por_vencer }} por vencer</span>{% endif %}
+            {% if not f.resumen.vencido and not f.resumen.por_vencer %}{% if f.resumen.vigente or f.resumen.sin_vencimiento %}Al día{% else %}Sin documentos{% endif %}{% endif %}
+          </td>
+          <td><a class="boton-tabla" href="{% url 'proveedores:detalle' f.proveedor.pk %}">Ver ficha</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No hay proveedores.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p><a class="boton-tabla" href="{% url 'inicio' %}">Volver al inicio</a></p>
+  </div>
+{% endblock %}

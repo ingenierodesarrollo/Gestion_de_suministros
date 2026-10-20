@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ proveedor.razon_social }} · Gestión de suministros{% endblock %}
+
+{% block contenido %}
+  <div class="tarjeta">
+    <h1>{{ proveedor.razon_social }}</h1>
+    {% for m in messages %}<p class="aviso {{ m.tags }}">{{ m }}</p>{% endfor %}
+    <div class="resumen-tarjetas">
+      <div class="dato"><span>NIT</span><strong>{{ proveedor.nit }}</strong></div>
+      <div class="dato"><span>Tipo de persona</span><strong>{{ proveedor.get_tipo_persona_display }}</strong></div>
+      <div class="dato"><span>Categoría</span><strong>{{ proveedor.categoria.nombre }}</strong></div>
+      <div class="dato"><span>Estado</span><strong><span class="etiqueta estado-{{ proveedor.estado }}">{{ proveedor.get_estado_display }}</span></strong></div>
+    </div>
+    <p class="resumen">
+      Contacto: {{ proveedor.contacto_nombre|default:"sin nombre" }}
+      · {{ proveedor.contacto_correo|default:"sin correo" }}
+      · {{ proveedor.contacto_telefono|default:"sin teléfono" }}
+    </p>
+    <p class="acciones">
+      <a class="boton-tabla" href="{% url 'proveedores:editar' proveedor.pk %}">Editar ficha</a>
+    </p>
+
+    <h2>Documentos actuales</h2>
+    <p class="resumen">
+      {{ resumen.vencido }} vencido{{ resumen.vencido|pluralize }} · {{ resumen.por_vencer }} por vencer · {{ resumen.vigente }} vigente{{ resumen.vigente|pluralize }} · {{ resumen.sin_vencimiento }} sin vencimiento
+    </p>
+    <table class="tabla">
+      <thead><tr><th>Documento</th><th>Expedición</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        {% for d in actuales %}
+        {% with e=d.estado_vigencia %}
+        <tr>
+          <td>{{ d.tipo.nombre }}</td>
+          <td>{{ d.fecha_expedicion|date:"d/m/Y"|default:"—" }}</td>
+          <td>{{ d.fecha_vencimiento|date:"d/m/Y"|default:"—" }}</td>
+          <td><span class="etiqueta vig-{{ e }}">{% if e == "vencido" %}Vencido{% elif e == "por_vencer" %}Por vencer{% elif e == "vigente" %}Vigente{% else %}No vence{% endif %}</span></td>
+          <td><a class="boton-tabla" href="{{ d.enlace_drive }}" target="_blank" rel="noopener noreferrer">Ver en Drive</a></td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="5">Este proveedor aún no tiene documentos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if anteriores %}
+    <h2>Documentos anteriores</h2>
+    <p class="resumen">Son versiones reemplazadas por una más reciente del mismo tipo; no cuentan para las alertas.</p>
+    <table class="tabla">
+      <thead><tr><th>Documento</th><th>Vencimiento</th><th></th></tr></thead>
+      <tbody>
+        {% for d in anteriores %}
+        <tr>
+          <td>{{ d.tipo.nombre }}</td>
+          <td>{{ d.fecha_vencimiento|date:"d/m/Y"|default:"—" }}</td>
+          <td><a class="boton-tabla" href="{{ d.enlace_drive }}" target="_blank" rel="noopener noreferrer">Ver en Drive</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    <p><a class="boton-tabla" href="{% url 'proveedores:lista' %}">Volver a proveedores</a></p>
+  </div>
+{% endblock %}

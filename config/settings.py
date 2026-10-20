@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'cuentas',
     'proyecciones',
     'configuracion',
+    "proveedores",
 ]
 
 MIDDLEWARE = [

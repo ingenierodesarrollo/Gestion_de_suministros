@@ -191,3 +191,13 @@ input[type="file"]::file-selector-button { padding: 0.45rem 0.9rem; margin-right
 .tabla td:has(.boton-borrar) .boton-tabla { min-width: 0; }
 .boton-borrar { padding: 0.25rem 0.7rem; line-height: 1.4; border-radius: 6px; font-family: inherit; vertical-align: middle; margin-left: 0.3rem; }
 .boton-borrar:hover { background: #fef2f2; }
+
+/* Fase 2: proveedores */
+.estado-en_revision { background: #e5e7eb; color: #374151; }
+.estado-aprobado { background: var(--azul); color: #fff; }
+.estado-condicionado { background: var(--azul-claro); color: var(--azul); }
+.estado-bloqueado { background: #991b1b; color: #fff; }
+.vig-vigente { background: var(--azul-claro); color: var(--azul); }
+.vig-sin_vencimiento { background: #e5e7eb; color: #374151; }
+.vig-por_vencer { background: #fff; color: #991b1b; border: 1px solid #991b1b; }
+.vig-vencido { background: #991b1b; color: #fff; }

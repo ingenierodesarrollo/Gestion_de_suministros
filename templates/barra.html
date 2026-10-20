@@ -15,6 +15,7 @@
       <a href="{% url 'configuracion:unidades' %}" class="{% if request.resolver_match.view_name == 'configuracion:unidades' %}activo{% endif %}">Unidades</a>
       <a href="{% url 'configuracion:productos' %}" class="{% if request.resolver_match.view_name == 'configuracion:productos' %}activo{% endif %}">Productos sugeridos</a>
       <a href="{% url 'configuracion:usuarios' %}" class="{% if request.resolver_match.view_name == 'configuracion:usuarios' %}activo{% endif %}">Usuarios</a>
+      <a href="{% url 'proveedores:lista' %}" class="{% if request.resolver_match.app_name == 'proveedores' %}activo{% endif %}">Proveedores</a>
     {% endif %}
   </nav>
   {% endif %}
