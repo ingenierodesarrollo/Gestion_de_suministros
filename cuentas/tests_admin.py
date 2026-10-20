@@ -170,3 +170,13 @@ class EnviosEnElPanelTest(TestCase):
         self.assertEqual(respuesta.status_code, 302)
         nuevo = EnvioProveedor.objects.get(nit='800111222')
         self.assertEqual((nuevo.estado, nuevo.origen), ('pendiente', 'manual'))
+
+
+class BotonVolverTest(TestCase):
+    def test_el_panel_tiene_boton_para_volver_a_proyecciones(self):
+        admin_user = Usuario.objects.create_user(
+            'admin@ejemplo.test', 'Admin', password=CLAVE, rol=Rol.ADMINISTRADOR)
+        self.client.force_login(admin_user)
+        for url in ('/admin/', '/admin/areas/area/'):
+            self.assertContains(self.client.get(url), reverse('proyecciones:revision'))
+            self.assertContains(self.client.get(url), 'Volver a Proyecciones')

@@ -30,3 +30,7 @@
     max-width: 60rem;
     font-size: 0.95rem;
 }
+
+/* Botón para volver al sistema (en la barra superior del panel) */
+.boton-volver { display: inline-block; margin-left: 20px; padding: 6px 14px; background: #ffffff; color: #172554 !important; border-radius: 4px; font-weight: 600; text-decoration: none; }
+.boton-volver:hover { background: #dbeafe; }
